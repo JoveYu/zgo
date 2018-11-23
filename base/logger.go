@@ -17,11 +17,20 @@ const (
 )
 
 const (
-    tagDebug = "[D] "
-    tagInfo = "[I] "
-    tagWarn = "[W] "
-    tagError = "[E] "
-    tagFatal = "[F] "
+    tagDebug = "D"
+    tagInfo  = "I"
+    tagWarn  = "W"
+    tagError = "E"
+    tagFatal = "F"
+)
+
+const (
+    colorDebug = ""
+    colorInfo = "\33[36m"
+    colorWarn = "\33[33m"
+    colorError = "\33[35m"
+    colorFatal = "\33[31m"
+    colorReset = "\33[0m"
 )
 
 const (
