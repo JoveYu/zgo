@@ -24,10 +24,11 @@ const (
     tagFatal = "F"
 )
 
+// ref: https://en.wikipedia.org/wiki/ANSI_escape_code
 const (
     colorDebug = ""
-    colorInfo = "\33[36m"
-    colorWarn = "\33[33m"
+    colorInfo  = "\33[36m"
+    colorWarn  = "\33[33m"
     colorError = "\33[35m"
     colorFatal = "\33[31m"
     colorReset = "\33[0m"
