@@ -35,9 +35,24 @@ const (
 )
 
 const (
-    flags = log.Ldate | log.Lmicroseconds | log.Lshortfile
+    Ldate = 1 << iota
+    Ltime
+    Lmicroseconds
+    Llongfile
+    Lshortfile
+    LUTC
+    Lpid
+    Ltag
+    LstdFlags = Ldate | Lmicroseconds | Lpid | Lshortfile | Ltag
 )
 
-var (
-    logLock sync.Mutex
-)
+type Logger struct {
+    lock sync.Mutex
+    level int
+    dest string
+    prefix string
+    flag int
+    out io.Writer
+    buf []byte
+}
+
