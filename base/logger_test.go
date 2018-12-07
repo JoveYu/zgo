@@ -3,7 +3,7 @@ package logger
 import "testing"
 
 func TestInstall(t *testing.T) {
-    Install("/tmp/test")
+    Install("stdout")
     log := GetLogger()
     log.Debug("test")
     log.Debug("test %s", "format")
@@ -26,4 +26,13 @@ func TestLevel(t *testing.T) {
         log.Error("error %d", i)
     }
     // log.Fatal("fatal")
+}
+func TestPrefix(t *testing.T) {
+    log := Install("stdout")
+    log.Debug("test")
+    log.SetPrefix("prefix:")
+    log.Debug("test")
+    log.Debug("test")
+    log.SetPrefix("")
+    log.Debug("test")
 }

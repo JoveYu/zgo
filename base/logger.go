@@ -111,11 +111,15 @@ func (l *LevelLogger) Log(level int, format string, v ...interface{} ) {
             message = fmt.Sprintf(format, v...)
         }
         if l.isColor{
-            l.Logger.Output(3, fmt.Sprint(color, tag, " ", message, ColorReset))
+            l.Logger.Output(3, fmt.Sprint(color, tag, " ", l.prefix, message, ColorReset))
         } else {
-            l.Logger.Output(3, fmt.Sprint(tag, " ", message))
+            l.Logger.Output(3, fmt.Sprint(tag, " ", l.prefix, message))
         }
     }
+}
+
+func (l *LevelLogger) SetPrefix(prefix string) {
+    l.prefix = prefix
 }
 
 func (l *LevelLogger) SetLevel(level int) {
