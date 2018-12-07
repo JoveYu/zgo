@@ -3,24 +3,27 @@ package logger
 import "testing"
 
 func TestInstall(t *testing.T) {
-    log := Install("stdout")
+    Install("/tmp/test")
+    log := GetLogger()
     log.Debug("test")
     log.Debug("test %s", "format")
 }
 func TestLevel(t *testing.T) {
-    log := Install("stdout")
+    // Install("stdout")
+    log := GetLogger()
     for i := 0; i<10 ; i++ {
-        log.Debug("中文 text %d", i)
-        log.Info("😀 text %d", i)
-        log.Warn("text %d", i)
-        log.Error("text %d", i)
+        log.Debug("中文 debug %d", i)
+        log.Info("😀 info %d", i)
+        log.Warn("warn %d", i)
+        log.Error("error %d", i)
     }
 
     log.SetLevel(LevelWarn)
     for i := 0; i<10 ; i++ {
-        log.Debug("text %d", i)
-        log.Info("text %d", i)
-        log.Warn("text %d", i)
-        log.Error("text %d", i)
+        log.Debug("debug %d", i)
+        log.Info("info %d", i)
+        log.Warn("warn %d", i)
+        log.Error("error %d", i)
     }
+    // log.Fatal("fatal")
 }
