@@ -26,7 +26,7 @@ const (
 // ref: https://en.wikipedia.org/wiki/ANSI_escape_code
 const (
     ColorDebug = ""
-    ColorInfo  = "\033[36m\033[s\033[1000D\033[u"
+    ColorInfo  = "\033[36m"
     ColorWarn  = "\033[33m"
     ColorError = "\033[31m"
     ColorFatal = "\033[35m"
