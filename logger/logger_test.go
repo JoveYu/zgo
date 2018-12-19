@@ -9,14 +9,14 @@ func TestInstall(t *testing.T) {
     log.Debug("test %s", "format")
 }
 func TestLevel(t *testing.T) {
-    // Install("stdout")
+    Install("stdout")
     log := GetLogger()
     for i := 0; i<10 ; i++ {
         log.Debug("中文 debug %d", i)
         log.Info("😀 info %d", i)
         log.Warn("warn %d", i)
         log.Error("error %d", i)
-        log.Print("print %d", i)
+        log.Printf("print %d", i)
     }
 
     log.SetLevel(LevelWarn)

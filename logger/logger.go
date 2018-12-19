@@ -58,6 +58,11 @@ func GetLogger() *LevelLogger {
 }
 
 func Install(dest string) *LevelLogger {
+    if defaultLog != nil {
+        defaultLog.Warn("can not install logger twice !!!")
+        return defaultLog
+    }
+
     var isColor bool
     var base *log.Logger
 
