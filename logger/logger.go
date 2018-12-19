@@ -1,3 +1,6 @@
+// TODO windows color
+// TODO check tty
+
 package logger
 
 import (
@@ -111,7 +114,9 @@ func (l *LevelLogger) Log(level int, format string, v ...interface{} ) {
             message = fmt.Sprintf(format, v...)
         }
         if l.isColor{
-            l.Logger.Output(3, fmt.Sprint(color, tag, " ", l.prefix, message, ColorReset))
+            l.Logger.SetPrefix(color)
+            l.Logger.Output(3, fmt.Sprint(tag, " ", l.prefix, message, ColorReset))
+            l.Logger.SetPrefix("")
         } else {
             l.Logger.Output(3, fmt.Sprint(tag, " ", l.prefix, message))
         }

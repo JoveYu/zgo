@@ -16,6 +16,7 @@ func TestLevel(t *testing.T) {
         log.Info("😀 info %d", i)
         log.Warn("warn %d", i)
         log.Error("error %d", i)
+        log.Print("print %d", i)
     }
 
     log.SetLevel(LevelWarn)
