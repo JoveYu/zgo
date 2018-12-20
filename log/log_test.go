@@ -1,4 +1,4 @@
-package logger
+package log
 
 import "testing"
 
@@ -7,6 +7,11 @@ func TestInstall(t *testing.T) {
     log := GetLogger()
     log.Debug("test")
     log.Debug("test %s", "format")
+
+    Debug("test")
+    Info("test %s", "format")
+    Warn("test %s", "format")
+    Error("test %s", "format")
 }
 func TestLevel(t *testing.T) {
     Install("stdout")

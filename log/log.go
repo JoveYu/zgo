@@ -1,7 +1,8 @@
 // TODO windows color
 // TODO check tty
+// TODO multi logger
 
-package logger
+package log
 
 import (
     "fmt"
@@ -90,7 +91,7 @@ func Install(dest string) *LevelLogger {
     return &l
 }
 
-func (l *LevelLogger) Log(level int, format string, v ...interface{} ) {
+func (l *LevelLogger) Log(level int, depth int, format string, v ...interface{} ) {
     if level >= l.level {
         var tag,color,message string
         switch level {
@@ -120,10 +121,10 @@ func (l *LevelLogger) Log(level int, format string, v ...interface{} ) {
         }
         if l.isColor{
             l.Logger.SetPrefix(color)
-            l.Logger.Output(3, fmt.Sprint(tag, " ", l.prefix, message, ColorReset))
+            l.Logger.Output(depth, fmt.Sprint(tag, " ", l.prefix, message, ColorReset))
             l.Logger.SetPrefix("")
         } else {
-            l.Logger.Output(3, fmt.Sprint(tag, " ", l.prefix, message))
+            l.Logger.Output(depth, fmt.Sprint(tag, " ", l.prefix, message))
         }
     }
 }
@@ -137,22 +138,43 @@ func (l *LevelLogger) SetLevel(level int) {
 }
 
 func (l *LevelLogger) Debug(format string, v ...interface{}) {
-    l.Log(LevelDebug, format, v...)
+    l.Log(LevelDebug, 3, format, v...)
 }
 
 func (l *LevelLogger) Info(format string, v ...interface{}) {
-    l.Log(LevelInfo, format, v...)
+    l.Log(LevelInfo, 3, format, v...)
 }
 
 func (l *LevelLogger) Warn(format string, v ...interface{}) {
-    l.Log(LevelWarn, format, v...)
+    l.Log(LevelWarn, 3, format, v...)
 }
 
 func (l *LevelLogger) Error(format string, v ...interface{}) {
-    l.Log(LevelError, format, v...)
+    l.Log(LevelError, 3, format, v...)
 }
 
 func (l *LevelLogger) Fatal(format string, v ...interface{}) {
-    l.Log(LevelFatal, format, v...)
+    l.Log(LevelFatal, 3, format, v...)
+    os.Exit(1)
+}
+
+func Debug(format string, v ...interface{}) {
+    defaultLog.Log(LevelDebug, 3, format, v...)
+}
+
+func Info(format string, v ...interface{}) {
+    defaultLog.Log(LevelInfo, 3, format, v...)
+}
+
+func Warn(format string, v ...interface{}) {
+    defaultLog.Log(LevelWarn, 3, format, v...)
+}
+
+func Error(format string, v ...interface{}) {
+    defaultLog.Log(LevelError, 3, format, v...)
+}
+
+func Fatal(format string, v ...interface{}) {
+    defaultLog.Log(LevelFatal, 3, format, v...)
     os.Exit(1)
 }
