@@ -68,3 +68,19 @@ func TestInstall(t *testing.T) {
     })
 }
 
+func TestTransaction(t *testing.T) {
+    log.Install("stdout")
+    Install(map[string][]string{
+        "sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
+        "mysql": []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/cmdb?charset=utf8mb4"},
+    })
+    db := GetDB("sqlite3")
+
+    db.Exec("drop table if exists test")
+    db.Exec("create table if not exists test(id integer not null primary key, name text, time datetime)")
+
+    tx,_ := db.Begin()
+    tx.Exec("select 1")
+    tx.Rollback()
+
+}

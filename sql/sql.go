@@ -24,6 +24,11 @@ type DB struct {
     dsn string
 }
 
+type Tx struct {
+    *sql.Tx
+    db *DB
+}
+
 func Install(conf map[string][]string) map[string]DB {
     log.Debug("available sql driver: %s", sql.Drivers())
     for k,v := range conf {
@@ -64,79 +69,95 @@ func GetDB(name string) *DB {
     }
 }
 
+func (t *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
+    var errstr = ""
+    defer t.db.timeit(time.Now(), &errstr, "1", query, args...)
+
+    result, err := t.Tx.Exec(query, args...)
+    if err != nil {
+        errstr = err.Error()
+    }
+    return result, err
+}
+func (t *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
+    var errstr = ""
+    defer t.db.timeit(time.Now(), &errstr, "1", query, args...)
+
+    result, err := t.Tx.Query(query, args...)
+    if err != nil {
+        errstr = err.Error()
+    }
+    return result, err
+}
+
+func (t *Tx) QueryRow(query string, args ...interface{}) (*sql.Row) {
+    var errstr = ""
+    defer t.db.timeit(time.Now(), &errstr, "1", query, args...)
+    return t.Tx.QueryRow(query, args...)
+}
+
+func (t *Tx) Commit() error {
+    d := t.db
+    log.Info("eq=%s|func=commit|name=%s", d.driver, d.name)
+    return t.Tx.Commit()
+}
+
+func (t *Tx) Rollback() error {
+    d := t.db
+    log.Info("eq=%s|func=rollback|name=%s", d.driver, d.name)
+    return t.Tx.Rollback()
+}
+
+func (d *DB) timeit(start time.Time, errstr *string, trans string, query string, args ...interface{}) {
+    stat := d.DB.Stats()
+    duration := time.Now().Sub(start)
+    if len(*errstr) == 0 {
+        log.Info("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s",
+            d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
+            stat.WaitDuration/time.Microsecond, duration/time.Microsecond, trans,
+            d.FormatSql(query, args...),
+        )
+    } else {
+        log.Warn("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s|err=%s",
+            d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
+            stat.WaitDuration/time.Microsecond, duration/time.Microsecond, trans,
+            d.FormatSql(query, args...), *errstr,
+        )
+    }
+}
+
+func (d *DB) Begin() (*Tx, error) {
+    log.Info("eq=%s|func=begin|name=%s", d.driver, d.name)
+    tx,err := d.DB.Begin()
+    return &Tx{Tx:tx, db:d}, err
+}
+
 func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
     var errstr = ""
-    start_time := time.Now()
+    defer d.timeit(time.Now(), &errstr, "0", query, args...)
 
     result, err := d.DB.Exec(query, args...)
     if err != nil {
         errstr = err.Error()
-    }
-
-    stat := d.DB.Stats()
-    end_time := time.Now()
-    duration := end_time.Sub(start_time)
-
-    if err != nil {
-        log.Warn("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|sql=%s|err=%s",
-            d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
-            stat.WaitDuration/time.Microsecond, duration/time.Microsecond,
-            d.FormatSql(query, args...), errstr,
-        )
-    } else {
-        log.Info("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|sql=%s",
-            d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
-            stat.WaitDuration/time.Microsecond, duration/time.Microsecond,
-            d.FormatSql(query, args...),
-        )
     }
     return result, err
 }
 
 func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
     var errstr = ""
-    start_time := time.Now()
+    defer d.timeit(time.Now(), &errstr, "0", query, args...)
 
     result, err := d.DB.Query(query, args...)
     if err != nil {
         errstr = err.Error()
     }
-
-    stat := d.DB.Stats()
-    end_time := time.Now()
-    duration := end_time.Sub(start_time)
-
-    if err != nil {
-        log.Warn("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|sql=%s|err=%s",
-            d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
-            stat.WaitDuration/time.Microsecond, duration/time.Microsecond,
-            d.FormatSql(query, args...), errstr,
-        )
-    } else {
-        log.Info("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|sql=%s",
-            d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
-            stat.WaitDuration/time.Microsecond, duration/time.Microsecond,
-            d.FormatSql(query, args...),
-        )
-    }
     return result, err
 }
 func (d *DB) QueryRow(query string, args ...interface{}) (*sql.Row) {
     var errstr = ""
-    start_time := time.Now()
+    defer d.timeit(time.Now(), &errstr, "0", query, args...)
 
-    result:= d.DB.QueryRow(query, args...)
-
-    stat := d.DB.Stats()
-    end_time := time.Now()
-    duration := end_time.Sub(start_time)
-
-    log.Info("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|sql=%s|err=%s",
-        d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
-        stat.WaitDuration/time.Microsecond, duration/time.Microsecond,
-        d.FormatSql(query, args...), errstr,
-    )
-    return result
+    return d.DB.QueryRow(query, args...)
 }
 
 func (d *DB) QueryMap(query string, args ...interface{}) ([]map[string]interface{}, error) {
