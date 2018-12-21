@@ -1,3 +1,7 @@
+// TODO select join
+// TODO select on
+// TODO select having
+
 package db
 
 import (
@@ -55,7 +59,7 @@ func GetDB(name string) *DB {
     if db, ok:=dbMap[name]; ok {
         return &db
     }else{
-        log.Errord(1, "can not get db [%s]", name)
+        log.Error("can not get db [%s]", name)
         return nil
     }
 }
