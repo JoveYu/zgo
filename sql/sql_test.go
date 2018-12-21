@@ -80,7 +80,18 @@ func TestTransaction(t *testing.T) {
     db.Exec("create table if not exists test(id integer not null primary key, name text, time datetime)")
 
     tx,_ := db.Begin()
-    tx.Exec("select 1")
-    tx.Rollback()
+    tx.Insert("test", map[string]interface{}{
+        "id": 1,
+        "name": "name",
+        "time": time.Now(),
+    })
+
+    rows := db.Select("test", map[string]interface{}{})
+    log.Debug("%s", rows)
+
+    tx.Commit()
+
+    rows = db.Select("test", map[string]interface{}{})
+    log.Debug("%s", rows)
 
 }

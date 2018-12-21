@@ -17,7 +17,14 @@ var (
     dbMap = make(map[string]DB)
 )
 
+type Base struct {
+    db DB
+    tx Tx
+    trans bool
+}
+
 type DB struct {
+    *Base
     *sql.DB
     name string
     driver string
@@ -25,6 +32,7 @@ type DB struct {
 }
 
 type Tx struct {
+    *Base
     *sql.Tx
     db *DB
 }
@@ -49,11 +57,16 @@ func Install(conf map[string][]string) map[string]DB {
         }
 
         zdb := DB{
+            Base: &Base{
+                trans:false,
+            },
             DB: db,
             name: k,
             driver: v[0],
             dsn: dsn,
         }
+        zdb.Base.db = zdb
+
         dbMap[k] = zdb
         log.Info("ep=%s|func=install|name=%s|conf=%s", zdb.driver, zdb.name, zdb.dsn)
     }
@@ -79,6 +92,7 @@ func (t *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
     }
     return result, err
 }
+
 func (t *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
     var errstr = ""
     defer t.db.timeit(time.Now(), &errstr, "1", query, args...)
@@ -93,6 +107,7 @@ func (t *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 func (t *Tx) QueryRow(query string, args ...interface{}) (*sql.Row) {
     var errstr = ""
     defer t.db.timeit(time.Now(), &errstr, "1", query, args...)
+
     return t.Tx.QueryRow(query, args...)
 }
 
@@ -129,7 +144,15 @@ func (d *DB) timeit(start time.Time, errstr *string, trans string, query string,
 func (d *DB) Begin() (*Tx, error) {
     log.Info("eq=%s|func=begin|name=%s", d.driver, d.name)
     tx,err := d.DB.Begin()
-    return &Tx{Tx:tx, db:d}, err
+    ztx := Tx{
+        Base: &Base{
+            trans:true,
+        },
+        Tx:tx,
+        db:d,
+    }
+    ztx.Base.tx = ztx
+    return &ztx, err
 }
 
 func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
@@ -160,10 +183,16 @@ func (d *DB) QueryRow(query string, args ...interface{}) (*sql.Row) {
     return d.DB.QueryRow(query, args...)
 }
 
-func (d *DB) QueryMap(query string, args ...interface{}) ([]map[string]interface{}, error) {
+func (b *Base) QueryMap(query string, args ...interface{}) ([]map[string]interface{}, error) {
     var data []map[string]interface{}
+    var rows *sql.Rows
+    var err error
 
-    rows, err := d.Query(query, args...)
+    if b.trans {
+        rows, err = b.tx.Query(query, args...)
+    } else {
+        rows, err = b.db.Query(query, args...)
+    }
     if err != nil {
         return nil, err
     }
@@ -194,7 +223,7 @@ func (d *DB) QueryMap(query string, args ...interface{}) ([]map[string]interface
     return data, nil
 }
 
-func (d *DB) FormatSql(query string, args ...interface{}) string {
+func (b *Base) FormatSql(query string, args ...interface{}) string {
     if len(args) == 0 {
         return query
     }
@@ -207,8 +236,8 @@ func (d *DB) FormatSql(query string, args ...interface{}) string {
     return fmt.Sprintf(query, args...)
 }
 
-func (d *DB) Select(table string, where map[string]interface{}) []map[string]interface{} {
-    sql := "select %s from `%s`%s%s %s"
+func (b *Base) Select(table string, where map[string]interface{}) []map[string]interface{} {
+    query := "select %s from `%s`%s%s %s"
     field := "*"
     other := ""
 
@@ -220,24 +249,32 @@ func (d *DB) Select(table string, where map[string]interface{}) []map[string]int
         other = value.(string)
         delete(where, "_other")
     }
-    k, v := d.where2sql(where)
+    k, v := b.where2sql(where)
     if len(v) == 0 {
-        sql = fmt.Sprintf(sql, field, table, "", "", other)
+        query = fmt.Sprintf(query, field, table, "", "", other)
     } else {
-        sql = fmt.Sprintf(sql, field, table, " where ", k, other)
+        query = fmt.Sprintf(query, field, table, " where ", k, other)
     }
-    result, err := d.QueryMap(sql, v...)
+    result, err := b.QueryMap(query, v...)
     if err != nil {
         return nil
     }
     return result
 }
-func (d *DB) Insert(table string, values map[string]interface{}) int64 {
-    sql := "insert into %s(%s) values(%s)"
-    k,v,i := d.insert2sql(values)
+func (b *Base) Insert(table string, values map[string]interface{}) int64 {
+    query := "insert into %s(%s) values(%s)"
+    k,v,i := b.insert2sql(values)
 
-    sql = fmt.Sprintf(sql, table, k, v)
-    result, err := d.Exec(sql, i...)
+    query = fmt.Sprintf(query, table, k, v)
+
+    var result sql.Result
+    var err error
+    if b.trans {
+        result, err = b.tx.Exec(query, i...)
+    } else {
+        result, err = b.db.Exec(query, i...)
+    }
+
     if err != nil {
         return int64(-1)
     }
@@ -248,8 +285,8 @@ func (d *DB) Insert(table string, values map[string]interface{}) int64 {
     return r
 }
 
-func (d *DB) Update(table string, values map[string]interface{}, where map[string]interface{}) int64 {
-    sql := "update %s set %s%s%s %s"
+func (b *Base) Update(table string, values map[string]interface{}, where map[string]interface{}) int64 {
+    query := "update %s set %s%s%s %s"
     other := ""
     var i []interface{}
 
@@ -257,17 +294,24 @@ func (d *DB) Update(table string, values map[string]interface{}, where map[strin
         other = value.(string)
         delete(where, "_other")
     }
-    set_k, set_v := d.update2sql(values)
+    set_k, set_v := b.update2sql(values)
     i = append(i, set_v...)
-    where_k, where_v := d.where2sql(where)
+    where_k, where_v := b.where2sql(where)
     i = append(i, where_v...)
 
     if len(where_v) == 0 {
-        sql = fmt.Sprintf(sql, table, set_k, "", "", other)
+        query = fmt.Sprintf(query, table, set_k, "", "", other)
     } else {
-        sql = fmt.Sprintf(sql, table, set_k, " where ", where_k, other)
+        query = fmt.Sprintf(query, table, set_k, " where ", where_k, other)
     }
-    result, err := d.Exec(sql, i...)
+
+    var result sql.Result
+    var err error
+    if b.trans {
+        result, err = b.tx.Exec(query, i...)
+    } else {
+        result, err = b.db.Exec(query, i...)
+    }
     if err != nil {
         return int64(-1)
     }
@@ -279,21 +323,28 @@ func (d *DB) Update(table string, values map[string]interface{}, where map[strin
     return r
 }
 
-func (d *DB) Delete(table string, where map[string]interface{}) int64 {
-    sql := "delete from `%s`%s%s %s"
+func (b *Base) Delete(table string, where map[string]interface{}) int64 {
+    query := "delete from `%s`%s%s %s"
     other := ""
 
     if value, ok := where["_other"]; ok {
         other = value.(string)
         delete(where, "_other")
     }
-    k, v := d.where2sql(where)
+    k, v := b.where2sql(where)
     if len(v) == 0 {
-        sql = fmt.Sprintf(sql, table, "", "", other)
+        query = fmt.Sprintf(query, table, "", "", other)
     } else {
-        sql = fmt.Sprintf(sql, table, " where ", k, other)
+        query = fmt.Sprintf(query, table, " where ", k, other)
     }
-    result, err := d.Exec(sql, v...)
+
+    var result sql.Result
+    var err error
+    if b.trans {
+        result, err = b.tx.Exec(query, v...)
+    } else {
+        result, err = b.db.Exec(query, v...)
+    }
     if err != nil {
         return int64(-1)
     }
@@ -306,7 +357,7 @@ func (d *DB) Delete(table string, where map[string]interface{}) int64 {
 }
 
 // from zpy/base/dbpool.py
-func (d *DB) exp2sql(key string, op string, value interface{}) (string, []interface{} ){
+func (b *Base) exp2sql(key string, op string, value interface{}) (string, []interface{} ){
     var i []interface{}
 
     builder := strings.Builder{}
@@ -314,7 +365,7 @@ func (d *DB) exp2sql(key string, op string, value interface{}) (string, []interf
 
     if op == "in" {
         builder.WriteString("(")
-        for idx, v := range d.interface2slice(value) {
+        for idx, v := range b.interface2slice(value) {
             if idx == 0 {
                 builder.WriteString("?")
             } else {
@@ -325,7 +376,7 @@ func (d *DB) exp2sql(key string, op string, value interface{}) (string, []interf
         builder.WriteString("))")
     }else if op == "between" {
         builder.WriteString("? and ?)")
-        v := d.interface2slice(value)
+        v := b.interface2slice(value)
         i = append(i, v[0])
         i = append(i, v[1])
     }else{
@@ -336,7 +387,7 @@ func (d *DB) exp2sql(key string, op string, value interface{}) (string, []interf
 }
 
 // from zpy/base/dbpool.py
-func (d *DB) where2sql(where map[string]interface{}) (string, []interface{}) {
+func (b *Base) where2sql(where map[string]interface{}) (string, []interface{}) {
     var key, op string
     var i []interface{}
     var s []string
@@ -351,7 +402,7 @@ func (d *DB) where2sql(where map[string]interface{}) (string, []interface{}) {
             key = k[:idx]
             op = k[idx+1:]
         }
-        ss, is := d.exp2sql(key, op, v)
+        ss, is := b.exp2sql(key, op, v)
         s = append(s, ss)
         i = append(i, is...)
         j++
@@ -360,7 +411,7 @@ func (d *DB) where2sql(where map[string]interface{}) (string, []interface{}) {
 }
 
 // from zpy/base/dbpool.py
-func (d *DB) update2sql(values map[string]interface{}) (string, []interface{}) {
+func (b *Base) update2sql(values map[string]interface{}) (string, []interface{}) {
     var i []interface{}
     var s []string
     for k,v := range values {
@@ -371,7 +422,7 @@ func (d *DB) update2sql(values map[string]interface{}) (string, []interface{}) {
 }
 
 // from zpy/base/dbpool.py
-func (d *DB) insert2sql(values map[string]interface{}) (string, string, []interface{}) {
+func (b *Base) insert2sql(values map[string]interface{}) (string, string, []interface{}) {
     var i []interface{}
     var s []string
     var ss []string
@@ -383,7 +434,7 @@ func (d *DB) insert2sql(values map[string]interface{}) (string, string, []interf
     return strings.Join(s, ","), strings.Join(ss, ","), i
 }
 
-func (d *DB) interface2slice(value interface{}) []interface{} {
+func (b *Base) interface2slice(value interface{}) []interface{} {
     v := reflect.ValueOf(value)
     if v.Kind() != reflect.Slice {
         log.Error("can not convert interface to slice")
