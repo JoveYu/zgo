@@ -178,3 +178,24 @@ func Fatal(format string, v ...interface{}) {
     defaultLog.Log(LevelFatal, 3, format, v...)
     os.Exit(1)
 }
+
+func Debugd(depth int, format string, v ...interface{}) {
+    defaultLog.Log(LevelDebug, 3+depth, format, v...)
+}
+
+func Infod(depth int, format string, v ...interface{}) {
+    defaultLog.Log(LevelInfo, 3+depth, format, v...)
+}
+
+func Warnd(depth int, format string, v ...interface{}) {
+    defaultLog.Log(LevelWarn, 3+depth, format, v...)
+}
+
+func Errord(depth int, format string, v ...interface{}) {
+    defaultLog.Log(LevelError, 3+depth, format, v...)
+}
+
+func Fatald(depth int, format string, v ...interface{}) {
+    defaultLog.Log(LevelFatal, 3+depth, format, v...)
+    os.Exit(1)
+}
