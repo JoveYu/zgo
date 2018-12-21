@@ -8,6 +8,7 @@ import (
     "fmt"
     "log"
     "os"
+    "sync"
 )
 
 const (
@@ -40,6 +41,7 @@ const (
 
 type LevelLogger struct {
     *log.Logger
+    mu sync.Mutex
     prefix string
     dest  string
     level int
@@ -120,9 +122,12 @@ func (l *LevelLogger) Log(level int, depth int, format string, v ...interface{} 
             message = fmt.Sprintf(format, v...)
         }
         if l.isColor{
+            // XXX debug only, slow with two lock
+            l.mu.Lock()
             l.Logger.SetPrefix(color)
             l.Logger.Output(depth, fmt.Sprint(tag, " ", l.prefix, message, ColorReset))
             l.Logger.SetPrefix("")
+            l.mu.Unlock()
         } else {
             l.Logger.Output(depth, fmt.Sprint(tag, " ", l.prefix, message))
         }

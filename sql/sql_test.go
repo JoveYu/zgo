@@ -2,6 +2,7 @@
 package sql
 
 import "fmt"
+import "sync"
 import "time"
 import "testing"
 import "github.com/JoveYu/zgo/log"
@@ -94,4 +95,31 @@ func TestTransaction(t *testing.T) {
     rows = db.Select("test", map[string]interface{}{})
     log.Debug("%s", rows)
 
+}
+
+func TestMulitRun(t *testing.T) {
+    log.Install("stdout")
+    Install(map[string][]string{
+        "sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
+    })
+    db := GetDB("sqlite3")
+    db.Exec("drop table if exists test")
+    db.Exec("create table if not exists test(id integer not null primary key, name text, time datetime)")
+
+    for i:=0; i<100; i++ {
+        db.Insert("test", map[string]interface{}{
+            "id": i,
+            "name": fmt.Sprintf("name %d", i),
+            "time": time.Now(),
+        })
+    }
+    var wa sync.WaitGroup
+    wa.Add(100)
+    for i:=0; i<100; i++ {
+        go func (){
+            db.Select("test", map[string]interface{}{})
+            wa.Done()
+        }()
+    }
+    wa.Wait()
 }
