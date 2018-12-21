@@ -1,5 +1,5 @@
 
-package db
+package sql
 
 import "fmt"
 import "time"

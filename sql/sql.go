@@ -2,7 +2,7 @@
 // TODO select on
 // TODO select having
 
-package db
+package sql
 
 import (
     "fmt"
