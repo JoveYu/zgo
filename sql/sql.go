@@ -113,13 +113,13 @@ func (t *Tx) QueryRow(query string, args ...interface{}) (*sql.Row) {
 
 func (t *Tx) Commit() error {
     d := t.db
-    log.Info("eq=%s|func=commit|name=%s", d.driver, d.name)
+    log.Info("ep=%s|func=commit|name=%s", d.driver, d.name)
     return t.Tx.Commit()
 }
 
 func (t *Tx) Rollback() error {
     d := t.db
-    log.Info("eq=%s|func=rollback|name=%s", d.driver, d.name)
+    log.Info("ep=%s|func=rollback|name=%s", d.driver, d.name)
     return t.Tx.Rollback()
 }
 
@@ -127,13 +127,13 @@ func (d *DB) timeit(start time.Time, errstr *string, trans string, query string,
     stat := d.DB.Stats()
     duration := time.Now().Sub(start)
     if len(*errstr) == 0 {
-        log.Info("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s",
+        log.Info("ep=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s",
             d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
             stat.WaitDuration/time.Microsecond, duration/time.Microsecond, trans,
             d.FormatSql(query, args...),
         )
     } else {
-        log.Warn("eq=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s|err=%s",
+        log.Warn("ep=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s|err=%s",
             d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
             stat.WaitDuration/time.Microsecond, duration/time.Microsecond, trans,
             d.FormatSql(query, args...), *errstr,
@@ -142,7 +142,7 @@ func (d *DB) timeit(start time.Time, errstr *string, trans string, query string,
 }
 
 func (d *DB) Begin() (*Tx, error) {
-    log.Info("eq=%s|func=begin|name=%s", d.driver, d.name)
+    log.Info("ep=%s|func=begin|name=%s", d.driver, d.name)
     tx,err := d.DB.Begin()
     ztx := Tx{
         Base: &Base{
