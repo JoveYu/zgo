@@ -236,7 +236,7 @@ func (b *Base) FormatSql(query string, args ...interface{}) string {
     return fmt.Sprintf(query, args...)
 }
 
-func (b *Base) Select(table string, where map[string]interface{}) []map[string]interface{} {
+func (b *Base) Select(table string, where map[string]interface{}) ([]map[string]interface{}, error) {
     query := "select %s from `%s`%s%s %s"
     field := "*"
     other := ""
@@ -255,37 +255,22 @@ func (b *Base) Select(table string, where map[string]interface{}) []map[string]i
     } else {
         query = fmt.Sprintf(query, field, table, " where ", k, other)
     }
-    result, err := b.QueryMap(query, v...)
-    if err != nil {
-        return nil
-    }
-    return result
+    return b.QueryMap(query, v...)
 }
-func (b *Base) Insert(table string, values map[string]interface{}) int64 {
+func (b *Base) Insert(table string, values map[string]interface{}) (sql.Result, error){
     query := "insert into %s(%s) values(%s)"
     k,v,i := b.insert2sql(values)
 
     query = fmt.Sprintf(query, table, k, v)
 
-    var result sql.Result
-    var err error
     if b.trans {
-        result, err = b.tx.Exec(query, i...)
+        return b.tx.Exec(query, i...)
     } else {
-        result, err = b.db.Exec(query, i...)
+        return b.db.Exec(query, i...)
     }
-
-    if err != nil {
-        return int64(-1)
-    }
-    r, err := result.LastInsertId()
-    if err != nil {
-        return int64(-1)
-    }
-    return r
 }
 
-func (b *Base) Update(table string, values map[string]interface{}, where map[string]interface{}) int64 {
+func (b *Base) Update(table string, values map[string]interface{}, where map[string]interface{}) (sql.Result, error) {
     query := "update %s set %s%s%s %s"
     other := ""
     var i []interface{}
@@ -305,25 +290,14 @@ func (b *Base) Update(table string, values map[string]interface{}, where map[str
         query = fmt.Sprintf(query, table, set_k, " where ", where_k, other)
     }
 
-    var result sql.Result
-    var err error
     if b.trans {
-        result, err = b.tx.Exec(query, i...)
+        return b.tx.Exec(query, i...)
     } else {
-        result, err = b.db.Exec(query, i...)
+        return b.db.Exec(query, i...)
     }
-    if err != nil {
-        return int64(-1)
-    }
-
-    r, err := result.RowsAffected()
-    if err != nil {
-        return int64(-1)
-    }
-    return r
 }
 
-func (b *Base) Delete(table string, where map[string]interface{}) int64 {
+func (b *Base) Delete(table string, where map[string]interface{}) (sql.Result, error) {
     query := "delete from `%s`%s%s %s"
     other := ""
 
@@ -338,22 +312,11 @@ func (b *Base) Delete(table string, where map[string]interface{}) int64 {
         query = fmt.Sprintf(query, table, " where ", k, other)
     }
 
-    var result sql.Result
-    var err error
     if b.trans {
-        result, err = b.tx.Exec(query, v...)
+        return b.tx.Exec(query, v...)
     } else {
-        result, err = b.db.Exec(query, v...)
+        return b.db.Exec(query, v...)
     }
-    if err != nil {
-        return int64(-1)
-    }
-
-    r, err := result.RowsAffected()
-    if err != nil {
-        return int64(-1)
-    }
-    return r
 }
 
 // from zpy/base/dbpool.py
