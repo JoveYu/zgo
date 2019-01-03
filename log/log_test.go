@@ -1,5 +1,6 @@
 package log
 
+import "errors"
 import "testing"
 
 func TestInstall(t *testing.T) {
@@ -8,6 +9,7 @@ func TestInstall(t *testing.T) {
     log.Debug("test")
     log.Debug("test %s", "format")
 
+    Debug(errors.New("test error"))
     Debug("test")
     Info("test %s", "format")
     Warn("test %s", "format")

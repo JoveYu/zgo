@@ -106,7 +106,7 @@ func Install(dest string) *LevelLogger {
     return &l
 }
 
-func (l *LevelLogger) Log(level int, depth int, format string, v ...interface{} ) {
+func (l *LevelLogger) Log(level int, depth int, v ...interface{} ) {
     if level >= l.Level {
         var tag,color,message string
         switch level {
@@ -129,10 +129,10 @@ func (l *LevelLogger) Log(level int, depth int, format string, v ...interface{} 
                 tag = TagLog
                 color = ColorReset
         }
-        if len(v) == 0 {
-            message = format
+        if len(v) == 1 {
+            message = fmt.Sprintf("%+v", v[0])
         } else {
-            message = fmt.Sprintf(format, v...)
+            message = fmt.Sprintf(v[0].(string), v[1:]...)
         }
         if l.Filename == "stdout" {
             // XXX debug only, slow with 4 lock
@@ -155,65 +155,65 @@ func (l *LevelLogger) SetLevel(level int) {
     l.Level = level
 }
 
-func (l *LevelLogger) Debug(format string, v ...interface{}) {
-    l.Log(LevelDebug, 3, format, v...)
+func (l *LevelLogger) Debug(v ...interface{}) {
+    l.Log(LevelDebug, 3, v...)
 }
 
-func (l *LevelLogger) Info(format string, v ...interface{}) {
-    l.Log(LevelInfo, 3, format, v...)
+func (l *LevelLogger) Info(v ...interface{}) {
+    l.Log(LevelInfo, 3, v...)
 }
 
-func (l *LevelLogger) Warn(format string, v ...interface{}) {
-    l.Log(LevelWarn, 3, format, v...)
+func (l *LevelLogger) Warn(v ...interface{}) {
+    l.Log(LevelWarn, 3, v...)
 }
 
-func (l *LevelLogger) Error(format string, v ...interface{}) {
-    l.Log(LevelError, 3, format, v...)
+func (l *LevelLogger) Error(v ...interface{}) {
+    l.Log(LevelError, 3, v...)
 }
 
-func (l *LevelLogger) Fatal(format string, v ...interface{}) {
-    l.Log(LevelFatal, 3, format, v...)
+func (l *LevelLogger) Fatal(v ...interface{}) {
+    l.Log(LevelFatal, 3, v...)
     os.Exit(1)
 }
 
-func Debug(format string, v ...interface{}) {
-    defaultLog.Log(LevelDebug, 3, format, v...)
+func Debug(v ...interface{}) {
+    defaultLog.Log(LevelDebug, 3, v...)
 }
 
-func Info(format string, v ...interface{}) {
-    defaultLog.Log(LevelInfo, 3, format, v...)
+func Info(v ...interface{}) {
+    defaultLog.Log(LevelInfo, 3, v...)
 }
 
-func Warn(format string, v ...interface{}) {
-    defaultLog.Log(LevelWarn, 3, format, v...)
+func Warn(v ...interface{}) {
+    defaultLog.Log(LevelWarn, 3, v...)
 }
 
-func Error(format string, v ...interface{}) {
-    defaultLog.Log(LevelError, 3, format, v...)
+func Error(v ...interface{}) {
+    defaultLog.Log(LevelError, 3, v...)
 }
 
-func Fatal(format string, v ...interface{}) {
-    defaultLog.Log(LevelFatal, 3, format, v...)
+func Fatal(v ...interface{}) {
+    defaultLog.Log(LevelFatal, 3, v...)
     os.Exit(1)
 }
 
-func Debugd(depth int, format string, v ...interface{}) {
-    defaultLog.Log(LevelDebug, 3+depth, format, v...)
+func Debugd(depth int, v ...interface{}) {
+    defaultLog.Log(LevelDebug, 3+depth, v...)
 }
 
-func Infod(depth int, format string, v ...interface{}) {
-    defaultLog.Log(LevelInfo, 3+depth, format, v...)
+func Infod(depth int, v ...interface{}) {
+    defaultLog.Log(LevelInfo, 3+depth, v...)
 }
 
-func Warnd(depth int, format string, v ...interface{}) {
-    defaultLog.Log(LevelWarn, 3+depth, format, v...)
+func Warnd(depth int, v ...interface{}) {
+    defaultLog.Log(LevelWarn, 3+depth, v...)
 }
 
-func Errord(depth int, format string, v ...interface{}) {
-    defaultLog.Log(LevelError, 3+depth, format, v...)
+func Errord(depth int, v ...interface{}) {
+    defaultLog.Log(LevelError, 3+depth, v...)
 }
 
-func Fatald(depth int, format string, v ...interface{}) {
-    defaultLog.Log(LevelFatal, 3+depth, format, v...)
+func Fatald(depth int, v ...interface{}) {
+    defaultLog.Log(LevelFatal, 3+depth, v...)
     os.Exit(1)
 }
