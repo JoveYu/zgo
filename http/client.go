@@ -25,13 +25,13 @@ func NewClient() *Client {
 func (c *Client) timit(start time.Time, resp *http.Response, err error) {
     req := resp.Request
     if err == nil {
-        log.Info("ep=httpclient|method=%s|url=%s|code=%d|body=%d|time=%d",
-            req.Method, req.URL, resp.StatusCode, resp.ContentLength,
+        log.Info("ep=httpclient|method=%s|url=%s|code=%d|req=%d|resp=%d|time=%d",
+            req.Method, req.URL, resp.StatusCode, req.ContentLength, resp.ContentLength,
             time.Now().Sub(start) / time.Microsecond,
         )
     } else {
-        log.Warn("ep=httpclient|method=%s|url=%s|code=%d|body=%d|time=%d|err=%s",
-            req.Method, req.URL, 0, 0,
+        log.Warn("ep=httpclient|method=%s|url=%s|code=%d|req=%d|resp=%d|time=%d|err=%s",
+            req.Method, req.URL, 0, req.ContentLength, 0,
             time.Now().Sub(start) / time.Microsecond, err,
         )
     }
