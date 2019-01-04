@@ -22,22 +22,22 @@ const (
 )
 
 const (
-    TagDebug = "[D]"
-    TagInfo  = "[I]"
-    TagWarn  = "[W]"
-    TagError = "[E]"
-    TagFatal = "[F]"
-    TagLog   = "[L]"
+    tagDebug = "[D]"
+    tagInfo  = "[I]"
+    tagWarn  = "[W]"
+    tagError = "[E]"
+    tagFatal = "[F]"
+    tagLog   = "[L]"
 )
 
 // ref: https://en.wikipedia.org/wiki/ANSI_escape_code
 const (
-    ColorDebug = "\033[37m"
-    ColorInfo  = "\033[36m"
-    ColorWarn  = "\033[33m"
-    ColorError = "\033[31m"
-    ColorFatal = "\033[35m"
-    ColorReset = "\033[0m"
+    colorDebug = "\033[37m"
+    colorInfo  = "\033[36m"
+    colorWarn  = "\033[33m"
+    colorError = "\033[31m"
+    colorFatal = "\033[35m"
+    colorReset = "\033[0m"
 )
 
 const (
@@ -111,23 +111,23 @@ func (l *LevelLogger) Log(level int, depth int, v ...interface{} ) {
         var tag,color,message string
         switch level {
             case LevelDebug:
-                tag = TagDebug
-                color = ColorDebug
+                tag = tagDebug
+                color = colorDebug
             case LevelInfo:
-                tag = TagInfo
-                color = ColorInfo
+                tag = tagInfo
+                color = colorInfo
             case LevelWarn:
-                tag = TagWarn
-                color = ColorWarn
+                tag = tagWarn
+                color = colorWarn
             case LevelError:
-                tag = TagError
-                color = ColorError
+                tag = tagError
+                color = colorError
             case LevelFatal:
-                tag = TagFatal
-                color = ColorFatal
+                tag = tagFatal
+                color = colorFatal
             default:
-                tag = TagLog
-                color = ColorReset
+                tag = tagLog
+                color = colorReset
         }
         if len(v) == 1 {
             message = fmt.Sprintf("%+v", v[0])
@@ -138,7 +138,7 @@ func (l *LevelLogger) Log(level int, depth int, v ...interface{} ) {
             // XXX debug only, slow with 4 lock
             l.mu.Lock()
             l.Logger.SetPrefix(color)
-            l.Logger.Output(depth, fmt.Sprint(tag, " ", l.Prefix, message, ColorReset))
+            l.Logger.Output(depth, fmt.Sprint(tag, " ", l.Prefix, message, colorReset))
             l.Logger.SetPrefix("")
             l.mu.Unlock()
         } else {
