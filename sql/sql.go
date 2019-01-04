@@ -258,7 +258,7 @@ func (b *Base) Select(table string, where map[string]interface{}) ([]map[string]
     return b.QueryMap(query, v...)
 }
 func (b *Base) Insert(table string, values map[string]interface{}) (sql.Result, error){
-    query := "insert into %s(%s) values(%s)"
+    query := "insert into `%s`(%s) values(%s)"
     k,v,i := b.insert2sql(values)
 
     query = fmt.Sprintf(query, table, k, v)
@@ -271,7 +271,7 @@ func (b *Base) Insert(table string, values map[string]interface{}) (sql.Result, 
 }
 
 func (b *Base) Update(table string, values map[string]interface{}, where map[string]interface{}) (sql.Result, error) {
-    query := "update %s set %s%s%s %s"
+    query := "update `%s` set %s%s%s %s"
     other := ""
     var i []interface{}
 

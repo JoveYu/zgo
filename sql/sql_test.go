@@ -13,7 +13,7 @@ func TestInstall(t *testing.T) {
     log.Install("stdout")
     Install(map[string][]string{
         "sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
-        "mysql": []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/cmdb?charset=utf8mb4"},
+        // "mysql": []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/cmdb?charset=utf8mb4"},
     })
     db := GetDB("sqlite3")
 
