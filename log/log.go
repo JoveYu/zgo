@@ -64,21 +64,21 @@ type LevelLogger struct {
 }
 
 var (
-    defaultLog *LevelLogger
+    DefaultLog *LevelLogger
 )
 
 func GetLogger() *LevelLogger {
-    if defaultLog == nil {
+    if DefaultLog == nil {
         fmt.Println("can not GetLogger before Install")
         os.Exit(1)
     }
-    return defaultLog
+    return DefaultLog
 }
 
 func Install(dest string) *LevelLogger {
-    if defaultLog != nil {
-        defaultLog.Warn("can not install logger twice !!!")
-        return defaultLog
+    if DefaultLog != nil {
+        DefaultLog.Warn("can not install logger twice !!!")
+        return DefaultLog
     }
 
     var base *log.Logger
@@ -102,7 +102,7 @@ func Install(dest string) *LevelLogger {
         Filename:   dest,
         Level:  LevelDebug,
     }
-    defaultLog = &l
+    DefaultLog = &l
     return &l
 }
 
@@ -177,43 +177,43 @@ func (l *LevelLogger) Fatal(v ...interface{}) {
 }
 
 func Debug(v ...interface{}) {
-    defaultLog.Log(LevelDebug, 3, v...)
+    DefaultLog.Log(LevelDebug, 3, v...)
 }
 
 func Info(v ...interface{}) {
-    defaultLog.Log(LevelInfo, 3, v...)
+    DefaultLog.Log(LevelInfo, 3, v...)
 }
 
 func Warn(v ...interface{}) {
-    defaultLog.Log(LevelWarn, 3, v...)
+    DefaultLog.Log(LevelWarn, 3, v...)
 }
 
 func Error(v ...interface{}) {
-    defaultLog.Log(LevelError, 3, v...)
+    DefaultLog.Log(LevelError, 3, v...)
 }
 
 func Fatal(v ...interface{}) {
-    defaultLog.Log(LevelFatal, 3, v...)
+    DefaultLog.Log(LevelFatal, 3, v...)
     os.Exit(1)
 }
 
 func Debugd(depth int, v ...interface{}) {
-    defaultLog.Log(LevelDebug, 3+depth, v...)
+    DefaultLog.Log(LevelDebug, 3+depth, v...)
 }
 
 func Infod(depth int, v ...interface{}) {
-    defaultLog.Log(LevelInfo, 3+depth, v...)
+    DefaultLog.Log(LevelInfo, 3+depth, v...)
 }
 
 func Warnd(depth int, v ...interface{}) {
-    defaultLog.Log(LevelWarn, 3+depth, v...)
+    DefaultLog.Log(LevelWarn, 3+depth, v...)
 }
 
 func Errord(depth int, v ...interface{}) {
-    defaultLog.Log(LevelError, 3+depth, v...)
+    DefaultLog.Log(LevelError, 3+depth, v...)
 }
 
 func Fatald(depth int, v ...interface{}) {
-    defaultLog.Log(LevelFatal, 3+depth, v...)
+    DefaultLog.Log(LevelFatal, 3+depth, v...)
     os.Exit(1)
 }
