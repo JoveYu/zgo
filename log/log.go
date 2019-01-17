@@ -10,6 +10,7 @@ import (
     "fmt"
     "log"
     "os"
+    "strings"
     "sync"
 )
 
@@ -107,6 +108,9 @@ func Install(dest string) *LevelLogger {
 }
 
 func (l *LevelLogger) Log(level int, depth int, v ...interface{} ) {
+    if len(v) == 0 {
+        return
+    }
     if level >= l.Level {
         var tag,color,message string
         switch level {
@@ -129,10 +133,11 @@ func (l *LevelLogger) Log(level int, depth int, v ...interface{} ) {
                 tag = tagLog
                 color = colorReset
         }
-        if len(v) == 1 {
-            message = fmt.Sprintf("%+v", v[0])
+        if format, ok := v[0].(string); ok {
+            message = fmt.Sprintf(format, v[1:]...)
         } else {
-            message = fmt.Sprintf(v[0].(string), v[1:]...)
+            format := strings.Repeat("%+v ", len(v))
+            message = fmt.Sprintf(format, v...)
         }
         if l.Filename == "stdout" {
             // XXX debug only, slow with 4 lock
