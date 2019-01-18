@@ -65,6 +65,12 @@ func TestInstall(t *testing.T) {
         "name": "new name",
     }, map[string]interface{}{
     })
+
+    rows,err = db.Select("test", map[string]interface{}{
+        "name": "??",
+    })
+    log.Debug("select ? %s", rows)
+
 }
 
 func TestTransaction(t *testing.T) {

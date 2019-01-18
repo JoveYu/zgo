@@ -1,6 +1,10 @@
 // TODO select join
 // TODO select on
 // TODO select having
+// TODO where or
+
+// use sql not orm
+// use simple sql not join
 
 package sql
 
@@ -113,13 +117,13 @@ func (t *Tx) QueryRow(query string, args ...interface{}) (*sql.Row) {
 
 func (t *Tx) Commit() error {
     d := t.db
-    log.Info("ep=%s|func=commit|name=%s", d.driver, d.name)
+    log.Info("ep=%s|name=%s|func=commit", d.driver, d.name)
     return t.Tx.Commit()
 }
 
 func (t *Tx) Rollback() error {
     d := t.db
-    log.Info("ep=%s|func=rollback|name=%s", d.driver, d.name)
+    log.Info("ep=%s|name=%s|func=rollback", d.driver, d.name)
     return t.Tx.Rollback()
 }
 
@@ -142,7 +146,7 @@ func (d *DB) timeit(start time.Time, errstr *string, trans string, query string,
 }
 
 func (d *DB) Begin() (*Tx, error) {
-    log.Info("ep=%s|func=begin|name=%s", d.driver, d.name)
+    log.Info("ep=%s|name=%s|func=begin", d.driver, d.name)
     tx,err := d.DB.Begin()
     ztx := Tx{
         Base: &Base{
@@ -231,7 +235,8 @@ func (b *Base) FormatSql(query string, args ...interface{}) string {
         log.Warn("format sql error %s %s", query, args)
         return query
     }
-    // TODO 与实际sql 有差距 仅供参考
+    // XXX for logging only, not real sql
+    // TODO pg is not '?'
     query = strings.Replace(query, "?", "[%+v]", -1)
     return fmt.Sprintf(query, args...)
 }
