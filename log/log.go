@@ -77,10 +77,6 @@ func GetLogger() *LevelLogger {
 }
 
 func Install(dest string) *LevelLogger {
-    if DefaultLog != nil {
-        DefaultLog.Warn("can not install logger twice !!!")
-        return DefaultLog
-    }
 
     var base *log.Logger
     var fp *os.File
@@ -103,7 +99,12 @@ func Install(dest string) *LevelLogger {
         Filename:   dest,
         Level:  LevelDebug,
     }
-    DefaultLog = &l
+
+    // first logger as DefaultLog
+    if DefaultLog == nil {
+        DefaultLog = &l
+    }
+
     return &l
 }
 
