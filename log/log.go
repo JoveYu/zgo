@@ -41,6 +41,7 @@ const (
     colorReset = "\033[0m"
 )
 
+// TODO
 const (
     RotateNo = iota
     RotateTimeDay
@@ -59,6 +60,8 @@ type LevelLogger struct {
     Prefix string
     Filename  string
     Level int
+
+    // TODO
     Rotate int
     MaxSize int
     MaxBackup int
@@ -108,7 +111,7 @@ func Install(dest string) *LevelLogger {
     return &l
 }
 
-func (l *LevelLogger) Log(level int, depth int, v ...interface{} ) {
+func (l *LevelLogger) Log(level int, depth int, prefix string, v ...interface{} ) {
     if len(v) == 0 {
         return
     }
@@ -144,11 +147,11 @@ func (l *LevelLogger) Log(level int, depth int, v ...interface{} ) {
             // XXX debug only, slow with 4 lock
             l.mu.Lock()
             l.Logger.SetPrefix(color)
-            l.Logger.Output(depth, fmt.Sprint(tag, " ", l.Prefix, message, colorReset))
+            l.Logger.Output(depth, fmt.Sprint(tag, " ", prefix, message, colorReset))
             l.Logger.SetPrefix("")
             l.mu.Unlock()
         } else {
-            l.Logger.Output(depth, fmt.Sprint(tag, " ", l.Prefix, message))
+            l.Logger.Output(depth, fmt.Sprint(tag, " ", prefix, message))
         }
     }
 }
@@ -162,64 +165,64 @@ func (l *LevelLogger) SetLevel(level int) {
 }
 
 func (l *LevelLogger) Debug(v ...interface{}) {
-    l.Log(LevelDebug, 3, v...)
+    l.Log(LevelDebug, 3, l.Prefix, v...)
 }
 
 func (l *LevelLogger) Info(v ...interface{}) {
-    l.Log(LevelInfo, 3, v...)
+    l.Log(LevelInfo, 3, l.Prefix, v...)
 }
 
 func (l *LevelLogger) Warn(v ...interface{}) {
-    l.Log(LevelWarn, 3, v...)
+    l.Log(LevelWarn, 3, l.Prefix, v...)
 }
 
 func (l *LevelLogger) Error(v ...interface{}) {
-    l.Log(LevelError, 3, v...)
+    l.Log(LevelError, 3, l.Prefix, v...)
 }
 
 func (l *LevelLogger) Fatal(v ...interface{}) {
-    l.Log(LevelFatal, 3, v...)
+    l.Log(LevelFatal, 3, l.Prefix, v...)
     os.Exit(1)
 }
 
 func Debug(v ...interface{}) {
-    DefaultLog.Log(LevelDebug, 3, v...)
+    DefaultLog.Log(LevelDebug, 3, DefaultLog.Prefix, v...)
 }
 
 func Info(v ...interface{}) {
-    DefaultLog.Log(LevelInfo, 3, v...)
+    DefaultLog.Log(LevelInfo, 3, DefaultLog.Prefix, v...)
 }
 
 func Warn(v ...interface{}) {
-    DefaultLog.Log(LevelWarn, 3, v...)
+    DefaultLog.Log(LevelWarn, 3, DefaultLog.Prefix, v...)
 }
 
 func Error(v ...interface{}) {
-    DefaultLog.Log(LevelError, 3, v...)
+    DefaultLog.Log(LevelError, 3, DefaultLog.Prefix, v...)
 }
 
 func Fatal(v ...interface{}) {
-    DefaultLog.Log(LevelFatal, 3, v...)
+    DefaultLog.Log(LevelFatal, 3, DefaultLog.Prefix, v...)
     os.Exit(1)
 }
 
 func Debugd(depth int, v ...interface{}) {
-    DefaultLog.Log(LevelDebug, 3+depth, v...)
+    DefaultLog.Log(LevelDebug, 3+depth, DefaultLog.Prefix, v...)
 }
 
 func Infod(depth int, v ...interface{}) {
-    DefaultLog.Log(LevelInfo, 3+depth, v...)
+    DefaultLog.Log(LevelInfo, 3+depth, DefaultLog.Prefix, v...)
 }
 
 func Warnd(depth int, v ...interface{}) {
-    DefaultLog.Log(LevelWarn, 3+depth, v...)
+    DefaultLog.Log(LevelWarn, 3+depth, DefaultLog.Prefix, v...)
 }
 
 func Errord(depth int, v ...interface{}) {
-    DefaultLog.Log(LevelError, 3+depth, v...)
+    DefaultLog.Log(LevelError, 3+depth, DefaultLog.Prefix, v...)
 }
 
 func Fatald(depth int, v ...interface{}) {
-    DefaultLog.Log(LevelFatal, 3+depth, v...)
+    DefaultLog.Log(LevelFatal, 3+depth, DefaultLog.Prefix, v...)
     os.Exit(1)
 }
