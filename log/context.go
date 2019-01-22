@@ -13,19 +13,19 @@ type LoggerContext struct {
 }
 
 func (c *LoggerContext) Debug(v ...interface{}) {
-    c.Logger.Log(LevelDebug, 4, c.Prefix, v...)
+    c.Logger.Log(LevelDebug, 3, c.Prefix, v...)
 }
 
 func (c *LoggerContext) Info(v ...interface{}) {
-    c.Logger.Log(LevelInfo, 4, c.Prefix, v...)
+    c.Logger.Log(LevelInfo, 3, c.Prefix, v...)
 }
 
 func (c *LoggerContext) Warn(v ...interface{}) {
-    c.Logger.Log(LevelWarn, 4, c.Prefix, v...)
+    c.Logger.Log(LevelWarn, 3, c.Prefix, v...)
 }
 
 func (c *LoggerContext) Error(v ...interface{}) {
-    c.Logger.Log(LevelError, 4, c.Prefix, v...)
+    c.Logger.Log(LevelError, 3, c.Prefix, v...)
 }
 
 func (c *LoggerContext) SetValue(k interface{}, v interface{}) {
