@@ -10,7 +10,7 @@ import _ "github.com/go-sql-driver/mysql"
 
 func TestInstall(t *testing.T) {
 	log.Install("stdout")
-	Install(map[string][]string{
+	Install(DBConf{
 		"sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
 		// "mysql": []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/cmdb?charset=utf8mb4"},
 	})
@@ -20,51 +20,51 @@ func TestInstall(t *testing.T) {
 	db.Exec("create table if not exists test(id integer not null primary key, name text, time datetime)")
 
 	for i := 1; i <= 10; i++ {
-		db.Insert("test", map[string]interface{}{
+		db.Insert("test", Values{
 			"id":   i,
 			"name": fmt.Sprintf("name %d", i),
 			"time": time.Now(),
 		})
 	}
 
-	rows, err := db.Select("test", map[string]interface{}{
+	rows, err := db.Select("test", Where{
 		"_field": "count(*)",
 	})
 	log.Debug("select count: %s, err: %s", rows, err)
 
-	rows, err = db.Select("test", map[string]interface{}{
+	rows, err = db.Select("test", Where{
 		"id in": []int{2, 3},
 	})
 	log.Debug("select in: %s", rows)
 
-	rows, err = db.Select("test", map[string]interface{}{
+	rows, err = db.Select("test", Where{
 		"id between": []int{2, 5},
 		"_other":     "order by id desc",
 	})
 	log.Debug("select between: %s", rows)
 
-	db.Delete("test", map[string]interface{}{
+	db.Delete("test", Where{
 		"id >": 5,
 	})
 
-	rows, err = db.Select("test", map[string]interface{}{
+	rows, err = db.Select("test", Where{
 		"_field": "count(*)",
 	})
 	log.Debug("select count: %s", rows)
 
-	db.Update("test", map[string]interface{}{
+	db.Update("test", Values{
 		"name": "new name",
-	}, map[string]interface{}{
+	}, Where{
 		"id <": 3,
 	})
-	rows, err = db.Select("test", map[string]interface{}{})
+	rows, err = db.Select("test", Where{})
 	log.Debug("select update: %s", rows)
 
-	db.Update("test", map[string]interface{}{
+	db.Update("test", Values{
 		"name": "new name",
-	}, map[string]interface{}{})
+	}, Where{})
 
-	rows, err = db.Select("test", map[string]interface{}{
+	rows, err = db.Select("test", Where{
 		"name": "??",
 	})
 	log.Debug("select ? %s", rows)
@@ -73,7 +73,7 @@ func TestInstall(t *testing.T) {
 
 func TestTransaction(t *testing.T) {
 	log.Install("stdout")
-	Install(map[string][]string{
+	Install(DBConf{
 		"sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
 		"mysql":   []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/cmdb?charset=utf8mb4"},
 	})
@@ -83,25 +83,25 @@ func TestTransaction(t *testing.T) {
 	db.Exec("create table if not exists test(id integer not null primary key, name text, time datetime)")
 
 	tx, _ := db.Begin()
-	tx.Insert("test", map[string]interface{}{
+	tx.Insert("test", Values{
 		"id":   1,
 		"name": "name",
 		"time": time.Now(),
 	})
 
-	rows, err := db.Select("test", map[string]interface{}{})
+	rows, err := db.Select("test", Where{})
 	log.Debug("%s %s", rows, err)
 
 	tx.Commit()
 
-	rows, err = db.Select("test", map[string]interface{}{})
+	rows, err = db.Select("test", Where{})
 	log.Debug("%s", rows)
 
 }
 
 func TestMulitRun(t *testing.T) {
 	log.Install("stdout")
-	Install(map[string][]string{
+	Install(DBConf{
 		"sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
 	})
 	db := GetDB("sqlite3")
@@ -111,7 +111,7 @@ func TestMulitRun(t *testing.T) {
 	count := 3
 
 	for i := 0; i < count; i++ {
-		db.Insert("test", map[string]interface{}{
+		db.Insert("test", Values{
 			"id":   i,
 			"name": fmt.Sprintf("name %d", i),
 			"time": time.Now(),
@@ -121,7 +121,7 @@ func TestMulitRun(t *testing.T) {
 	wa.Add(count)
 	for i := 0; i < count; i++ {
 		go func() {
-			db.Select("test", map[string]interface{}{})
+			db.Select("test", Where{})
 			wa.Done()
 		}()
 	}

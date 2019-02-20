@@ -39,8 +39,9 @@ type Tx struct {
 
 type Where builder.Where
 type Values builder.Values
+type DBConf map[string][]string
 
-func Install(conf map[string][]string) map[string]DB {
+func Install(conf DBConf) map[string]DB {
 	log.Debug("available sql driver: %s", sql.Drivers())
 	for k, v := range conf {
 		if len(v) != 2 {
