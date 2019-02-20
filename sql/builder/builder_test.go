@@ -24,6 +24,7 @@ func TestAll(t *testing.T) {
 			"time": time.Now(),
 		})
 		log.Debug("sql: %s, args: %v", sql, args)
+		log.Debug("sql: %s", FormatSql(sql, args...))
 		_, err := db.Exec(sql, args...)
 		log.Debug("insert err:%v", err)
 	}
@@ -43,6 +44,7 @@ func TestAll(t *testing.T) {
 	})
 
 	log.Debug("sql: %s, args: %v", sql, args)
+	log.Debug("sql: %s", FormatSql(sql, args...))
 
 	_, err := db.Query(sql, args...)
 	log.Debug("select err:%v", err)
@@ -53,6 +55,7 @@ func TestAll(t *testing.T) {
 		"id >": 3,
 	})
 	log.Debug("sql: %s, args: %v", sql, args)
+	log.Debug("sql: %s", FormatSql(sql, args...))
 	_, err = db.Exec(sql, args...)
 	log.Debug("update err:%v", err)
 
@@ -60,6 +63,7 @@ func TestAll(t *testing.T) {
 		"id !=": 3,
 	})
 	log.Debug("sql: %s, args: %v", sql, args)
+	log.Debug("sql: %s", FormatSql(sql, args...))
 	_, err = db.Exec(sql, args...)
 	log.Debug("delete err:%v", err)
 
