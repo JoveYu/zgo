@@ -159,4 +159,9 @@ func TestScan(t *testing.T) {
 	db.SelectScan(&user, "test", Where{})
 	log.Debug(user)
 
+	user1 := User{}
+	log.Debug(user1)
+	db.SelectScan(&user1, "test", Where{"_other": "order by id desc"})
+	log.Debug(user1)
+
 }
