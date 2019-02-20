@@ -145,6 +145,19 @@ func Delete(table string, where Where) (string, []interface{}) {
 	return sb.String(), args
 }
 
+func FormatSql(query string, args ...interface{}) string {
+	if len(args) == 0 {
+		return query
+	}
+	if strings.Count(query, "?") != len(args) {
+		return query
+	}
+	// XXX for logging only, not real sql
+	// TODO pg is not '?'
+	query = strings.Replace(query, "?", "[%+v]", -1)
+	return fmt.Sprintf(query, args...)
+}
+
 func values2insert(values Values) (string, string, []interface{}) {
 	var args []interface{}
 	var name []string

@@ -5,7 +5,6 @@ package sql
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 	"time"
 
@@ -134,13 +133,13 @@ func (d *DB) timeit(start time.Time, errstr *string, trans string, query string,
 		log.Info("ep=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s",
 			d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
 			stat.WaitDuration/time.Microsecond, duration/time.Microsecond, trans,
-			d.FormatSql(query, args...),
+			builder.FormatSql(query, args...),
 		)
 	} else {
 		log.Warn("ep=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s|err=%s",
 			d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
 			stat.WaitDuration/time.Microsecond, duration/time.Microsecond, trans,
-			d.FormatSql(query, args...), *errstr,
+			builder.FormatSql(query, args...), *errstr,
 		)
 	}
 }
@@ -225,20 +224,6 @@ func (b *Base) QueryMap(query string, args ...interface{}) ([]map[string]interfa
 	}
 
 	return data, nil
-}
-
-func (b *Base) FormatSql(query string, args ...interface{}) string {
-	if len(args) == 0 {
-		return query
-	}
-	if strings.Count(query, "?") != len(args) {
-		log.Warn("format sql error %s %s", query, args)
-		return query
-	}
-	// XXX for logging only, not real sql
-	// TODO pg is not '?'
-	query = strings.Replace(query, "?", "[%+v]", -1)
-	return fmt.Sprintf(query, args...)
 }
 
 func (b *Base) Select(table string, where Where) ([]map[string]interface{}, error) {
