@@ -203,7 +203,7 @@ func (d *DBTool) QueryScan(obj interface{}, query string, args ...interface{}) e
 }
 
 func (d *DBTool) SelectScan(obj interface{}, table string, where Where) error {
-	sql, args := builder.Select(table, builder.Where(where))
+	sql, args := builder.Select(table, d.escapeWhere(where))
 	return d.QueryScan(obj, sql, args...)
 }
 
@@ -251,12 +251,12 @@ func (d *DBTool) QueryMap(query string, args ...interface{}) ([]map[string]inter
 }
 
 func (d *DBTool) SelectMap(table string, where Where) ([]map[string]interface{}, error) {
-	sql, args := builder.Select(table, builder.Where(where))
+	sql, args := builder.Select(table, d.escapeWhere(where))
 	return d.QueryMap(sql, args...)
 }
 
 func (d *DBTool) Select(table string, where Where) (*sql.Rows, error) {
-	sql, args := builder.Select(table, builder.Where(where))
+	sql, args := builder.Select(table, d.escapeWhere(where))
 	if d.tx != nil {
 		return d.tx.Query(sql, args...)
 	} else {
@@ -275,7 +275,7 @@ func (d *DBTool) Insert(table string, value Values) (sql.Result, error) {
 
 func (d *DBTool) Update(table string, value Values, where Where) (sql.Result, error) {
 
-	sql, args := builder.Update(table, builder.Values(value), builder.Where(where))
+	sql, args := builder.Update(table, builder.Values(value), d.escapeWhere(where))
 
 	if d.tx != nil {
 		return d.tx.Exec(sql, args...)
@@ -286,11 +286,18 @@ func (d *DBTool) Update(table string, value Values, where Where) (sql.Result, er
 
 func (d *DBTool) Delete(table string, where Where) (sql.Result, error) {
 
-	sql, args := builder.Delete(table, builder.Where(where))
+	sql, args := builder.Delete(table, d.escapeWhere(where))
 
 	if d.tx != nil {
 		return d.tx.Exec(sql, args...)
 	} else {
 		return d.db.Exec(sql, args...)
 	}
+}
+
+func (d *DBTool) escapeWhere(where Where) builder.Where {
+	if value, ok := where["_having"]; ok {
+		where["_having"] = builder.Where(value.(Where))
+	}
+	return builder.Where(where)
 }
