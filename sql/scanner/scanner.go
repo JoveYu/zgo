@@ -23,7 +23,6 @@ func ScanStruct(rows *sql.Rows, dest interface{}) error {
 
 	switch tp.Kind() {
 	case reflect.Slice:
-		i := 0
 		for rows.Next() {
 			obj := reflect.New(tp.Elem())
 
@@ -34,7 +33,6 @@ func ScanStruct(rows *sql.Rows, dest interface{}) error {
 
 			v.Set(reflect.Append(v, obj.Elem()))
 		}
-		i++
 
 	case reflect.Struct:
 		if rows.Next() {
