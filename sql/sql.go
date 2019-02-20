@@ -180,9 +180,11 @@ func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 }
 
 func (d *DBTool) QueryScan(obj interface{}, query string, args ...interface{}) error {
+	return nil
 }
 
 func (d *DBTool) SelectScan(obj interface{}, table string, where Where) error {
+	return nil
 }
 
 func (d *DBTool) QueryMap(query string, args ...interface{}) ([]map[string]interface{}, error) {
