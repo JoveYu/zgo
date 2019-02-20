@@ -10,6 +10,7 @@ import (
 
 	"github.com/JoveYu/zgo/log"
 	"github.com/JoveYu/zgo/sql/builder"
+	"github.com/JoveYu/zgo/sql/scanner"
 )
 
 var (
@@ -180,11 +181,30 @@ func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 }
 
 func (d *DBTool) QueryScan(obj interface{}, query string, args ...interface{}) error {
+	var rows *sql.Rows
+	var err error
+
+	if d.tx != nil {
+		rows, err = d.tx.Query(query, args...)
+	} else {
+		rows, err = d.db.Query(query, args...)
+	}
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	err = scanner.ScanStruct(rows, obj)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (d *DBTool) SelectScan(obj interface{}, table string, where Where) error {
-	return nil
+	sql, args := builder.Select(table, builder.Where(where))
+	return d.QueryScan(obj, sql, args...)
 }
 
 func (d *DBTool) QueryMap(query string, args ...interface{}) ([]map[string]interface{}, error) {
@@ -197,9 +217,12 @@ func (d *DBTool) QueryMap(query string, args ...interface{}) ([]map[string]inter
 	} else {
 		rows, err = d.db.Query(query, args...)
 	}
+
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
 	cols, err := rows.Columns()
 	if err != nil {
 		return nil, err

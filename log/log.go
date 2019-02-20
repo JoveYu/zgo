@@ -186,43 +186,63 @@ func (l *LevelLogger) Fatal(v ...interface{}) {
 }
 
 func Debug(v ...interface{}) {
-	DefaultLog.Log(LevelDebug, 3, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelDebug, 3, DefaultLog.Prefix, v...)
+	}
 }
 
 func Info(v ...interface{}) {
-	DefaultLog.Log(LevelInfo, 3, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelInfo, 3, DefaultLog.Prefix, v...)
+	}
 }
 
 func Warn(v ...interface{}) {
-	DefaultLog.Log(LevelWarn, 3, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelWarn, 3, DefaultLog.Prefix, v...)
+	}
 }
 
 func Error(v ...interface{}) {
-	DefaultLog.Log(LevelError, 3, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelError, 3, DefaultLog.Prefix, v...)
+	}
 }
 
 func Fatal(v ...interface{}) {
-	DefaultLog.Log(LevelFatal, 3, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelFatal, 3, DefaultLog.Prefix, v...)
+	}
 	os.Exit(1)
 }
 
 func Debugd(depth int, v ...interface{}) {
-	DefaultLog.Log(LevelDebug, 3+depth, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelDebug, 3+depth, DefaultLog.Prefix, v...)
+	}
 }
 
 func Infod(depth int, v ...interface{}) {
-	DefaultLog.Log(LevelInfo, 3+depth, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelInfo, 3+depth, DefaultLog.Prefix, v...)
+	}
 }
 
 func Warnd(depth int, v ...interface{}) {
-	DefaultLog.Log(LevelWarn, 3+depth, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelWarn, 3+depth, DefaultLog.Prefix, v...)
+	}
 }
 
 func Errord(depth int, v ...interface{}) {
-	DefaultLog.Log(LevelError, 3+depth, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelError, 3+depth, DefaultLog.Prefix, v...)
+	}
 }
 
 func Fatald(depth int, v ...interface{}) {
-	DefaultLog.Log(LevelFatal, 3+depth, DefaultLog.Prefix, v...)
+	if DefaultLog != nil {
+		DefaultLog.Log(LevelFatal, 3+depth, DefaultLog.Prefix, v...)
+	}
 	os.Exit(1)
 }

@@ -127,3 +127,36 @@ func TestMulitRun(t *testing.T) {
 	}
 	wa.Wait()
 }
+
+type User struct {
+	Id    int       `zdb:"id"`
+	Name  string    `zdb:"name"`
+	Time  time.Time `zdb:"time"`
+	Other string
+}
+
+func TestScan(t *testing.T) {
+	log.Install("stdout")
+	Install(DBConf{
+		"sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
+	})
+	db := GetDB("sqlite3")
+	db.Exec("drop table if exists test")
+	db.Exec("create table if not exists test(id integer not null primary key, name text, time datetime)")
+
+	count := 3
+
+	for i := 0; i < count; i++ {
+		db.Insert("test", Values{
+			"id":   i,
+			"name": fmt.Sprintf("name %d", i),
+			"time": time.Now(),
+		})
+	}
+
+	user := []User{}
+	log.Debug(user)
+	db.SelectScan(&user, "test", Where{})
+	log.Debug(user)
+
+}
