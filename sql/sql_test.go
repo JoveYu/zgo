@@ -27,17 +27,17 @@ func TestInstall(t *testing.T) {
 		})
 	}
 
-	rows, err := db.Select("test", Where{
+	rows, err := db.SelectMap("test", Where{
 		"_field": "count(*)",
 	})
 	log.Debug("select count: %s, err: %s", rows, err)
 
-	rows, err = db.Select("test", Where{
+	rows, err = db.SelectMap("test", Where{
 		"id in": []int{2, 3},
 	})
 	log.Debug("select in: %s", rows)
 
-	rows, err = db.Select("test", Where{
+	rows, err = db.SelectMap("test", Where{
 		"id between": []int{2, 5},
 		"_other":     "order by id desc",
 	})
@@ -47,7 +47,7 @@ func TestInstall(t *testing.T) {
 		"id >": 5,
 	})
 
-	rows, err = db.Select("test", Where{
+	rows, err = db.SelectMap("test", Where{
 		"_field": "count(*)",
 	})
 	log.Debug("select count: %s", rows)
@@ -57,14 +57,14 @@ func TestInstall(t *testing.T) {
 	}, Where{
 		"id <": 3,
 	})
-	rows, err = db.Select("test", Where{})
+	rows, err = db.SelectMap("test", Where{})
 	log.Debug("select update: %s", rows)
 
 	db.Update("test", Values{
 		"name": "new name",
 	}, Where{})
 
-	rows, err = db.Select("test", Where{
+	rows, err = db.SelectMap("test", Where{
 		"name": "??",
 	})
 	log.Debug("select ? %s", rows)
@@ -89,12 +89,12 @@ func TestTransaction(t *testing.T) {
 		"time": time.Now(),
 	})
 
-	rows, err := db.Select("test", Where{})
+	rows, err := db.SelectMap("test", Where{})
 	log.Debug("%s %s", rows, err)
 
 	tx.Commit()
 
-	rows, err = db.Select("test", Where{})
+	rows, err = db.SelectMap("test", Where{})
 	log.Debug("%s", rows)
 
 }
@@ -121,7 +121,7 @@ func TestMulitRun(t *testing.T) {
 	wa.Add(count)
 	for i := 0; i < count; i++ {
 		go func() {
-			db.Select("test", Where{})
+			db.SelectMap("test", Where{})
 			wa.Done()
 		}()
 	}

@@ -16,14 +16,13 @@ var (
 	dbMap = make(map[string]DB)
 )
 
-type Base struct {
-	db    DB
-	tx    Tx
-	trans bool
+type DBTool struct {
+	db *DB
+	tx *Tx
 }
 
 type DB struct {
-	*Base
+	*DBTool
 	*sql.DB
 	name   string
 	driver string
@@ -31,7 +30,7 @@ type DB struct {
 }
 
 type Tx struct {
-	*Base
+	*DBTool
 	*sql.Tx
 	db *DB
 }
@@ -60,15 +59,12 @@ func Install(conf DBConf) map[string]DB {
 		}
 
 		zdb := DB{
-			Base: &Base{
-				trans: false,
-			},
 			DB:     db,
 			name:   k,
 			driver: v[0],
 			dsn:    dsn,
 		}
-		zdb.Base.db = zdb
+		zdb.DBTool = &DBTool{db: &zdb}
 
 		dbMap[k] = zdb
 		log.Info("ep=%s|func=install|name=%s|conf=%s", zdb.driver, zdb.name, zdb.dsn)
@@ -148,13 +144,10 @@ func (d *DB) Begin() (*Tx, error) {
 	log.Info("ep=%s|name=%s|func=begin", d.driver, d.name)
 	tx, err := d.DB.Begin()
 	ztx := Tx{
-		Base: &Base{
-			trans: true,
-		},
 		Tx: tx,
 		db: d,
 	}
-	ztx.Base.tx = ztx
+	ztx.DBTool = &DBTool{tx: &ztx}
 	return &ztx, err
 }
 
@@ -186,15 +179,21 @@ func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 	return d.DB.QueryRow(query, args...)
 }
 
-func (b *Base) QueryMap(query string, args ...interface{}) ([]map[string]interface{}, error) {
+func (d *DBTool) QueryScan(obj interface{}, query string, args ...interface{}) error {
+}
+
+func (d *DBTool) SelectScan(obj interface{}, table string, where Where) error {
+}
+
+func (d *DBTool) QueryMap(query string, args ...interface{}) ([]map[string]interface{}, error) {
 	var data []map[string]interface{}
 	var rows *sql.Rows
 	var err error
 
-	if b.trans {
-		rows, err = b.tx.Query(query, args...)
+	if d.tx != nil {
+		rows, err = d.tx.Query(query, args...)
 	} else {
-		rows, err = b.db.Query(query, args...)
+		rows, err = d.db.Query(query, args...)
 	}
 	if err != nil {
 		return nil, err
@@ -226,38 +225,47 @@ func (b *Base) QueryMap(query string, args ...interface{}) ([]map[string]interfa
 	return data, nil
 }
 
-func (b *Base) Select(table string, where Where) ([]map[string]interface{}, error) {
+func (d *DBTool) SelectMap(table string, where Where) ([]map[string]interface{}, error) {
 	sql, args := builder.Select(table, builder.Where(where))
-	return b.QueryMap(sql, args...)
+	return d.QueryMap(sql, args...)
 }
-func (b *Base) Insert(table string, value Values) (sql.Result, error) {
+
+func (d *DBTool) Select(table string, where Where) (*sql.Rows, error) {
+	sql, args := builder.Select(table, builder.Where(where))
+	if d.tx != nil {
+		return d.tx.Query(sql, args...)
+	} else {
+		return d.db.Query(sql, args...)
+	}
+}
+func (d *DBTool) Insert(table string, value Values) (sql.Result, error) {
 	sql, args := builder.Insert(table, builder.Values(value))
 
-	if b.trans {
-		return b.tx.Exec(sql, args...)
+	if d.tx != nil {
+		return d.tx.Exec(sql, args...)
 	} else {
-		return b.db.Exec(sql, args...)
+		return d.db.Exec(sql, args...)
 	}
 }
 
-func (b *Base) Update(table string, value Values, where Where) (sql.Result, error) {
+func (d *DBTool) Update(table string, value Values, where Where) (sql.Result, error) {
 
 	sql, args := builder.Update(table, builder.Values(value), builder.Where(where))
 
-	if b.trans {
-		return b.tx.Exec(sql, args...)
+	if d.tx != nil {
+		return d.tx.Exec(sql, args...)
 	} else {
-		return b.db.Exec(sql, args...)
+		return d.db.Exec(sql, args...)
 	}
 }
 
-func (b *Base) Delete(table string, where Where) (sql.Result, error) {
+func (d *DBTool) Delete(table string, where Where) (sql.Result, error) {
 
 	sql, args := builder.Delete(table, builder.Where(where))
 
-	if b.trans {
-		return b.tx.Exec(sql, args...)
+	if d.tx != nil {
+		return d.tx.Exec(sql, args...)
 	} else {
-		return b.db.Exec(sql, args...)
+		return d.db.Exec(sql, args...)
 	}
 }
