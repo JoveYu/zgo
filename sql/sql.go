@@ -1,8 +1,3 @@
-// TODO select join
-// TODO select on
-// TODO select having
-// TODO where or
-
 // use sql not orm
 // use simple sql not join
 
@@ -11,10 +6,11 @@ package sql
 import (
 	"database/sql"
 	"fmt"
-	"github.com/JoveYu/zgo/log"
-	"reflect"
 	"strings"
 	"time"
+
+	"github.com/JoveYu/zgo/log"
+	"github.com/JoveYu/zgo/sql/builder"
 )
 
 var (
@@ -40,6 +36,9 @@ type Tx struct {
 	*sql.Tx
 	db *DB
 }
+
+type Where builder.Where
+type Values builder.Values
 
 func Install(conf map[string][]string) map[string]DB {
 	log.Debug("available sql driver: %s", sql.Drivers())
@@ -241,176 +240,38 @@ func (b *Base) FormatSql(query string, args ...interface{}) string {
 	return fmt.Sprintf(query, args...)
 }
 
-func (b *Base) Select(table string, where map[string]interface{}) ([]map[string]interface{}, error) {
-	query := "select %s from `%s`%s%s %s"
-	field := "*"
-	other := ""
-
-	if value, ok := where["_field"]; ok {
-		field = value.(string)
-		delete(where, "_field")
-	}
-	if value, ok := where["_other"]; ok {
-		other = value.(string)
-		delete(where, "_other")
-	}
-	k, v := b.where2sql(where)
-	if len(v) == 0 {
-		query = fmt.Sprintf(query, field, table, "", "", other)
-	} else {
-		query = fmt.Sprintf(query, field, table, " where ", k, other)
-	}
-	return b.QueryMap(query, v...)
+func (b *Base) Select(table string, where Where) ([]map[string]interface{}, error) {
+	sql, args := builder.Select(table, builder.Where(where))
+	return b.QueryMap(sql, args...)
 }
-func (b *Base) Insert(table string, values map[string]interface{}) (sql.Result, error) {
-	query := "insert into `%s`(%s) values(%s)"
-	k, v, i := b.insert2sql(values)
-
-	query = fmt.Sprintf(query, table, k, v)
+func (b *Base) Insert(table string, value Values) (sql.Result, error) {
+	sql, args := builder.Insert(table, builder.Values(value))
 
 	if b.trans {
-		return b.tx.Exec(query, i...)
+		return b.tx.Exec(sql, args...)
 	} else {
-		return b.db.Exec(query, i...)
+		return b.db.Exec(sql, args...)
 	}
 }
 
-func (b *Base) Update(table string, values map[string]interface{}, where map[string]interface{}) (sql.Result, error) {
-	query := "update `%s` set %s%s%s %s"
-	other := ""
-	var i []interface{}
+func (b *Base) Update(table string, value Values, where Where) (sql.Result, error) {
 
-	if value, ok := where["_other"]; ok {
-		other = value.(string)
-		delete(where, "_other")
-	}
-	set_k, set_v := b.update2sql(values)
-	i = append(i, set_v...)
-	where_k, where_v := b.where2sql(where)
-	i = append(i, where_v...)
-
-	if len(where_v) == 0 {
-		query = fmt.Sprintf(query, table, set_k, "", "", other)
-	} else {
-		query = fmt.Sprintf(query, table, set_k, " where ", where_k, other)
-	}
+	sql, args := builder.Update(table, builder.Values(value), builder.Where(where))
 
 	if b.trans {
-		return b.tx.Exec(query, i...)
+		return b.tx.Exec(sql, args...)
 	} else {
-		return b.db.Exec(query, i...)
+		return b.db.Exec(sql, args...)
 	}
 }
 
-func (b *Base) Delete(table string, where map[string]interface{}) (sql.Result, error) {
-	query := "delete from `%s`%s%s %s"
-	other := ""
+func (b *Base) Delete(table string, where Where) (sql.Result, error) {
 
-	if value, ok := where["_other"]; ok {
-		other = value.(string)
-		delete(where, "_other")
-	}
-	k, v := b.where2sql(where)
-	if len(v) == 0 {
-		query = fmt.Sprintf(query, table, "", "", other)
-	} else {
-		query = fmt.Sprintf(query, table, " where ", k, other)
-	}
+	sql, args := builder.Delete(table, builder.Where(where))
 
 	if b.trans {
-		return b.tx.Exec(query, v...)
+		return b.tx.Exec(sql, args...)
 	} else {
-		return b.db.Exec(query, v...)
+		return b.db.Exec(sql, args...)
 	}
-}
-
-// from zpy/base/dbpool.py
-func (b *Base) exp2sql(key string, op string, value interface{}) (string, []interface{}) {
-	var i []interface{}
-
-	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("(`%s` %s ", key, op))
-
-	if op == "in" {
-		builder.WriteString("(")
-		for idx, v := range b.interface2slice(value) {
-			if idx == 0 {
-				builder.WriteString("?")
-			} else {
-				builder.WriteString(",?")
-			}
-			i = append(i, v)
-		}
-		builder.WriteString("))")
-	} else if op == "between" {
-		builder.WriteString("? and ?)")
-		v := b.interface2slice(value)
-		i = append(i, v[0])
-		i = append(i, v[1])
-	} else {
-		builder.WriteString("?)")
-		i = append(i, value)
-	}
-	return builder.String(), i
-}
-
-// from zpy/base/dbpool.py
-func (b *Base) where2sql(where map[string]interface{}) (string, []interface{}) {
-	var key, op string
-	var i []interface{}
-	var s []string
-	j := 0
-	for k, v := range where {
-		k = strings.Trim(k, " ")
-		idx := strings.IndexByte(k, ' ')
-		if idx == -1 {
-			key = k
-			op = "="
-		} else {
-			key = k[:idx]
-			op = k[idx+1:]
-		}
-		ss, is := b.exp2sql(key, op, v)
-		s = append(s, ss)
-		i = append(i, is...)
-		j++
-	}
-	return strings.Join(s, " and "), i
-}
-
-// from zpy/base/dbpool.py
-func (b *Base) update2sql(values map[string]interface{}) (string, []interface{}) {
-	var i []interface{}
-	var s []string
-	for k, v := range values {
-		s = append(s, fmt.Sprintf("`%s`=?", k))
-		i = append(i, v)
-	}
-	return strings.Join(s, ","), i
-}
-
-// from zpy/base/dbpool.py
-func (b *Base) insert2sql(values map[string]interface{}) (string, string, []interface{}) {
-	var i []interface{}
-	var s []string
-	var ss []string
-	for k, v := range values {
-		s = append(s, fmt.Sprintf("`%s`", k))
-		ss = append(ss, "?")
-		i = append(i, v)
-	}
-	return strings.Join(s, ","), strings.Join(ss, ","), i
-}
-
-func (b *Base) interface2slice(value interface{}) []interface{} {
-	v := reflect.ValueOf(value)
-	if v.Kind() != reflect.Slice {
-		log.Error("can not convert interface to slice")
-		return nil
-	}
-	s := make([]interface{}, v.Len())
-	for i := 0; i < v.Len(); i++ {
-		s[i] = v.Index(i).Interface()
-	}
-	return s
 }
