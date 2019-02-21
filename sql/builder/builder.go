@@ -1,5 +1,5 @@
 // build sql just like use zpy/base/dbpool.py
-// not build all sql
+// not build for all sql
 
 // TODO use $1 instead of ? for pg
 // TODO SelectJoin

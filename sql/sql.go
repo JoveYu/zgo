@@ -1,6 +1,9 @@
 // use sql not orm
 // use simple sql not join
 
+// use go sql just like python dbpool.py
+// ref : https://github.com/JoveYu/zpy/blob/master/base/dbpool.py
+
 package sql
 
 import (
