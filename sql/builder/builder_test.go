@@ -67,4 +67,10 @@ func TestAll(t *testing.T) {
 	_, err = db.Exec(sql, args...)
 	log.Debug("delete err:%v", err)
 
+	sql, args = Select("test", Where{
+		"id >":  0,
+		"id > ": 1,
+	})
+	log.Debug("sql: %s, args: %v", sql, args)
+
 }
