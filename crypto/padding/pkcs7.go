@@ -23,6 +23,10 @@ func (p Pkcs7Padding) UnPad(data []byte) ([]byte, error) {
 	datalen := len(data)
 	length := int(data[datalen-1])
 
+	if datalen%p.BlockSize != 0 {
+		return nil, errors.New("not padded correctly")
+	}
+
 	if length > p.BlockSize || length <= 0 {
 		return nil, errors.New("not padded correctly")
 	}

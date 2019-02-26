@@ -22,6 +22,10 @@ func (p ZeroPadding) Pad(data []byte) ([]byte, error) {
 func (p ZeroPadding) UnPad(data []byte) ([]byte, error) {
 	datalen := len(data)
 
+	if datalen%p.BlockSize != 0 {
+		return nil, errors.New("not padded correctly")
+	}
+
 	var length int
 	for length = 0; length <= datalen; length++ {
 		if int(data[datalen-1-length]) != 0 {
