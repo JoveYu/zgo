@@ -32,12 +32,13 @@ func (c *LoggerContext) SetValue(k interface{}, v interface{}) {
 	c.Context = context.WithValue(c, k, v)
 }
 
-func NewLoggerContext(logger *LevelLogger, prefix string) *LoggerContext {
+func NewLoggerContext(ctx context.Context, logger *LevelLogger, prefix string) *LoggerContext {
 	if logger == nil {
 		logger = DefaultLog
 	}
 	return &LoggerContext{
-		Logger: logger,
-		Prefix: prefix,
+		Context: ctx,
+		Logger:  logger,
+		Prefix:  prefix,
 	}
 }
