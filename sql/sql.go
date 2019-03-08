@@ -4,9 +4,12 @@
 // use go sql just like python dbpool.py
 // ref : https://github.com/JoveYu/zpy/blob/master/base/dbpool.py
 
+// XXX overwrite too many func for logging
+
 package sql
 
 import (
+	"context"
 	"database/sql"
 	"strings"
 	"time"
@@ -92,6 +95,13 @@ func (t *Tx) Exec(query string, args ...interface{}) (result sql.Result, err err
 	return
 }
 
+func (t *Tx) ExecContext(ctx context.Context, query string, args ...interface{}) (result sql.Result, err error) {
+	defer t.db.timeit(time.Now(), &err, true, query, args...)
+
+	result, err = t.Tx.ExecContext(ctx, query, args...)
+	return
+}
+
 func (t *Tx) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	defer t.db.timeit(time.Now(), &err, true, query, args...)
 
@@ -99,10 +109,23 @@ func (t *Tx) Query(query string, args ...interface{}) (rows *sql.Rows, err error
 	return
 }
 
+func (t *Tx) QueryContext(ctx context.Context, query string, args ...interface{}) (rows *sql.Rows, err error) {
+	defer t.db.timeit(time.Now(), &err, true, query, args...)
+
+	rows, err = t.Tx.QueryContext(ctx, query, args...)
+	return
+}
+
 func (t *Tx) QueryRow(query string, args ...interface{}) *sql.Row {
 	defer t.db.timeit(time.Now(), nil, true, query, args...)
 
 	return t.Tx.QueryRow(query, args...)
+}
+
+func (t *Tx) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	defer t.db.timeit(time.Now(), nil, true, query, args...)
+
+	return t.Tx.QueryRowContext(ctx, query, args...)
 }
 
 func (t *Tx) Commit() error {
@@ -159,16 +182,37 @@ func (d *DB) Exec(query string, args ...interface{}) (result sql.Result, err err
 	return
 }
 
+func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (result sql.Result, err error) {
+	defer d.timeit(time.Now(), &err, false, query, args...)
+
+	result, err = d.DB.ExecContext(ctx, query, args...)
+	return
+}
+
 func (d *DB) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	defer d.timeit(time.Now(), &err, false, query, args...)
 
 	rows, err = d.DB.Query(query, args...)
 	return
 }
+
+func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (rows *sql.Rows, err error) {
+	defer d.timeit(time.Now(), &err, false, query, args...)
+
+	rows, err = d.DB.QueryContext(ctx, query, args...)
+	return
+}
+
 func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 	defer d.timeit(time.Now(), nil, false, query, args...)
 
 	return d.DB.QueryRow(query, args...)
+}
+
+func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	defer d.timeit(time.Now(), nil, false, query, args...)
+
+	return d.DB.QueryRowContext(ctx, query, args...)
 }
 
 func (d *DBTool) QueryScan(obj interface{}, query string, args ...interface{}) error {
@@ -193,15 +237,41 @@ func (d *DBTool) QueryScan(obj interface{}, query string, args ...interface{}) e
 	return nil
 }
 
+func (d *DBTool) QueryContextScan(ctx context.Context, obj interface{}, query string, args ...interface{}) error {
+	var rows *sql.Rows
+	var err error
+
+	if d.tx != nil {
+		rows, err = d.tx.QueryContext(ctx, query, args...)
+	} else {
+		rows, err = d.db.QueryContext(ctx, query, args...)
+	}
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	err = scanner.ScanStruct(rows, obj)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *DBTool) SelectScan(obj interface{}, table string, where Where) error {
 	sql, args := builder.Select(table, d.escapeWhere(where))
 	return d.QueryScan(obj, sql, args...)
 }
 
-func (d *DBTool) QueryMap(query string, args ...interface{}) ([]map[string]interface{}, error) {
-	var data []map[string]interface{}
+func (d *DBTool) SelectContextScan(ctx context.Context, obj interface{}, table string, where Where) error {
+	sql, args := builder.Select(table, d.escapeWhere(where))
+	return d.QueryContextScan(ctx, obj, sql, args...)
+}
+
+// TODO
+func (d *DBTool) QueryMap(query string, args ...interface{}) (data []map[string]interface{}, err error) {
 	var rows *sql.Rows
-	var err error
 
 	if d.tx != nil {
 		rows, err = d.tx.Query(query, args...)
@@ -241,6 +311,7 @@ func (d *DBTool) QueryMap(query string, args ...interface{}) ([]map[string]inter
 	return data, nil
 }
 
+// TODO
 func (d *DBTool) SelectMap(table string, where Where) ([]map[string]interface{}, error) {
 	sql, args := builder.Select(table, d.escapeWhere(where))
 	return d.QueryMap(sql, args...)
@@ -254,6 +325,16 @@ func (d *DBTool) Select(table string, where Where) (*sql.Rows, error) {
 		return d.db.Query(sql, args...)
 	}
 }
+
+func (d *DBTool) SelectContext(ctx context.Context, table string, where Where) (*sql.Rows, error) {
+	sql, args := builder.Select(table, d.escapeWhere(where))
+	if d.tx != nil {
+		return d.tx.QueryContext(ctx, sql, args...)
+	} else {
+		return d.db.QueryContext(ctx, sql, args...)
+	}
+}
+
 func (d *DBTool) Insert(table string, value Values) (sql.Result, error) {
 	sql, args := builder.Insert(table, builder.Values(value))
 
@@ -261,6 +342,16 @@ func (d *DBTool) Insert(table string, value Values) (sql.Result, error) {
 		return d.tx.Exec(sql, args...)
 	} else {
 		return d.db.Exec(sql, args...)
+	}
+}
+
+func (d *DBTool) InsertContext(ctx context.Context, table string, value Values) (sql.Result, error) {
+	sql, args := builder.Insert(table, builder.Values(value))
+
+	if d.tx != nil {
+		return d.tx.ExecContext(ctx, sql, args...)
+	} else {
+		return d.db.ExecContext(ctx, sql, args...)
 	}
 }
 
@@ -274,6 +365,16 @@ func (d *DBTool) Update(table string, value Values, where Where) (sql.Result, er
 		return d.db.Exec(sql, args...)
 	}
 }
+func (d *DBTool) UpdateContext(ctx context.Context, table string, value Values, where Where) (sql.Result, error) {
+
+	sql, args := builder.Update(table, builder.Values(value), d.escapeWhere(where))
+
+	if d.tx != nil {
+		return d.tx.ExecContext(ctx, sql, args...)
+	} else {
+		return d.db.ExecContext(ctx, sql, args...)
+	}
+}
 
 func (d *DBTool) Delete(table string, where Where) (sql.Result, error) {
 
@@ -283,6 +384,16 @@ func (d *DBTool) Delete(table string, where Where) (sql.Result, error) {
 		return d.tx.Exec(sql, args...)
 	} else {
 		return d.db.Exec(sql, args...)
+	}
+}
+func (d *DBTool) DeleteContext(ctx context.Context, table string, where Where) (sql.Result, error) {
+
+	sql, args := builder.Delete(table, d.escapeWhere(where))
+
+	if d.tx != nil {
+		return d.tx.ExecContext(ctx, sql, args...)
+	} else {
+		return d.db.ExecContext(ctx, sql, args...)
 	}
 }
 
