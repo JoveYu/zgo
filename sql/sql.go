@@ -85,31 +85,22 @@ func GetDB(name string) *DB {
 	}
 }
 
-func (t *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
-	var errstr = ""
-	defer t.db.timeit(time.Now(), &errstr, "1", query, args...)
+func (t *Tx) Exec(query string, args ...interface{}) (result sql.Result, err error) {
+	defer t.db.timeit(time.Now(), &err, true, query, args...)
 
-	result, err := t.Tx.Exec(query, args...)
-	if err != nil {
-		errstr = err.Error()
-	}
-	return result, err
+	result, err = t.Tx.Exec(query, args...)
+	return
 }
 
-func (t *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	var errstr = ""
-	defer t.db.timeit(time.Now(), &errstr, "1", query, args...)
+func (t *Tx) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+	defer t.db.timeit(time.Now(), &err, true, query, args...)
 
-	result, err := t.Tx.Query(query, args...)
-	if err != nil {
-		errstr = err.Error()
-	}
-	return result, err
+	rows, err = t.Tx.Query(query, args...)
+	return
 }
 
 func (t *Tx) QueryRow(query string, args ...interface{}) *sql.Row {
-	var errstr = ""
-	defer t.db.timeit(time.Now(), &errstr, "1", query, args...)
+	defer t.db.timeit(time.Now(), nil, true, query, args...)
 
 	return t.Tx.QueryRow(query, args...)
 }
@@ -126,20 +117,26 @@ func (t *Tx) Rollback() error {
 	return t.Tx.Rollback()
 }
 
-func (d *DB) timeit(start time.Time, errstr *string, trans string, query string, args ...interface{}) {
+func (d *DB) timeit(start time.Time, err *error, trans bool, query string, args ...interface{}) {
 	stat := d.DB.Stats()
 	duration := time.Now().Sub(start)
-	if len(*errstr) == 0 {
-		log.Info("ep=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s",
+
+	t := 0
+	if trans {
+		t = 1
+	}
+
+	if *err == nil {
+		log.Info("ep=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%d|sql=%s|err=",
 			d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
-			stat.WaitDuration/time.Microsecond, duration/time.Microsecond, trans,
+			stat.WaitDuration/time.Microsecond, duration/time.Microsecond, t,
 			builder.FormatSql(query, args...),
 		)
 	} else {
-		log.Warn("ep=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%s|sql=%s|err=%s",
+		log.Warn("ep=%s|name=%s|use=%d|idle=%d|max=%d|wait=%d|waittime=%d|time=%d|trans=%d|sql=%s|err=%s",
 			d.driver, d.name, stat.InUse, stat.Idle, stat.MaxOpenConnections, stat.WaitCount,
-			stat.WaitDuration/time.Microsecond, duration/time.Microsecond, trans,
-			builder.FormatSql(query, args...), *errstr,
+			stat.WaitDuration/time.Microsecond, duration/time.Microsecond, t,
+			builder.FormatSql(query, args...), *err,
 		)
 	}
 }
@@ -155,30 +152,21 @@ func (d *DB) Begin() (*Tx, error) {
 	return &ztx, err
 }
 
-func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
-	var errstr = ""
-	defer d.timeit(time.Now(), &errstr, "0", query, args...)
+func (d *DB) Exec(query string, args ...interface{}) (result sql.Result, err error) {
+	defer d.timeit(time.Now(), &err, false, query, args...)
 
-	result, err := d.DB.Exec(query, args...)
-	if err != nil {
-		errstr = err.Error()
-	}
-	return result, err
+	result, err = d.DB.Exec(query, args...)
+	return
 }
 
-func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	var errstr = ""
-	defer d.timeit(time.Now(), &errstr, "0", query, args...)
+func (d *DB) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+	defer d.timeit(time.Now(), &err, false, query, args...)
 
-	result, err := d.DB.Query(query, args...)
-	if err != nil {
-		errstr = err.Error()
-	}
-	return result, err
+	rows, err = d.DB.Query(query, args...)
+	return
 }
 func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
-	var errstr = ""
-	defer d.timeit(time.Now(), &errstr, "0", query, args...)
+	defer d.timeit(time.Now(), nil, false, query, args...)
 
 	return d.DB.QueryRow(query, args...)
 }

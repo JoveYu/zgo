@@ -16,6 +16,8 @@ func TestInstall(t *testing.T) {
 	})
 	db := GetDB("sqlite3")
 
+	db.Exec("wrong sql test")
+
 	db.Exec("drop table if exists test")
 	db.Exec("create table if not exists test(id integer not null primary key, name text, time datetime)")
 
