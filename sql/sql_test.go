@@ -1,6 +1,7 @@
 package sql
 
 import "fmt"
+import "context"
 import "sync"
 import "time"
 import "testing"
@@ -12,7 +13,7 @@ func TestInstall(t *testing.T) {
 	log.Install("stdout")
 	Install(DBConf{
 		"sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
-		// "mysql": []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/cmdb?charset=utf8mb4"},
+		// "mysql": []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/zgo?charset=utf8mb4"},
 	})
 	db := GetDB("sqlite3")
 
@@ -22,7 +23,7 @@ func TestInstall(t *testing.T) {
 	db.Exec("create table if not exists test(id integer not null primary key, name text, time datetime)")
 
 	for i := 1; i <= 10; i++ {
-		db.Insert("test", Values{
+		db.InsertContext(context.TODO(), "test", Values{
 			"id":   i,
 			"name": fmt.Sprintf("name %d", i),
 			"time": time.Now(),
@@ -77,7 +78,7 @@ func TestTransaction(t *testing.T) {
 	log.Install("stdout")
 	Install(DBConf{
 		"sqlite3": []string{"sqlite3", "file::memory:?mode=memory&cache=shared"},
-		"mysql":   []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/cmdb?charset=utf8mb4"},
+		"mysql":   []string{"mysql", "test:123456@tcp(127.0.0.1:3306)/test?charset=utf8mb4"},
 	})
 	db := GetDB("sqlite3")
 
