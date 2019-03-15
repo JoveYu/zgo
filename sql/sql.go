@@ -142,7 +142,7 @@ func (t *Tx) Rollback() error {
 
 func (d *DB) timeit(start time.Time, err *error, trans bool, query string, args ...interface{}) {
 	stat := d.DB.Stats()
-	duration := time.Now().Sub(start)
+	duration := time.Since(start)
 
 	t := 0
 	if trans {
