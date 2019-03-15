@@ -39,6 +39,8 @@ func NewContext(w http.ResponseWriter, r *http.Request) Context {
 		ResponseWriter: &LoggingResponseWriter{w, 0},
 		Charset:        "utf-8",
 		formParsed:     false,
+
+		Params: make(map[string]string),
 	}
 }
 

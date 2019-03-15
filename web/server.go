@@ -46,7 +46,6 @@ func (s *Server) ProcessHandler(w http.ResponseWriter, r *http.Request) {
 	tstart := time.Now()
 
 	ctx := NewContext(w, r)
-	ctx.Params = make(map[string]string)
 
 	path := ctx.URL().Path
 
