@@ -1,33 +1,35 @@
 package web
 
-import ()
+import (
+	"net/http"
+)
 
 var (
 	DefaultServer = NewServer()
 )
 
-func Route(method string, path string, f ContextHandlerFunc) {
-	DefaultServer.Router(method, path, f)
+func Route(method string, path string, f ...ContextHandlerFunc) {
+	DefaultServer.Router(method, path, f...)
 }
 
-func GET(path string, f ContextHandlerFunc) {
-	DefaultServer.Router("GET", path, f)
+func GET(path string, f ...ContextHandlerFunc) {
+	DefaultServer.Router(http.MethodGet, path, f...)
 }
 
-func POST(path string, f ContextHandlerFunc) {
-	DefaultServer.Router("POST", path, f)
+func POST(path string, f ...ContextHandlerFunc) {
+	DefaultServer.Router(http.MethodPost, path, f...)
 }
 
-func PUT(path string, f ContextHandlerFunc) {
-	DefaultServer.Router("PUT", path, f)
+func PUT(path string, f ...ContextHandlerFunc) {
+	DefaultServer.Router(http.MethodPut, path, f...)
 }
 
-func DELETE(path string, f ContextHandlerFunc) {
-	DefaultServer.Router("DELETE", path, f)
+func DELETE(path string, f ...ContextHandlerFunc) {
+	DefaultServer.Router(http.MethodDelete, path, f...)
 }
 
-func PATCH(path string, f ContextHandlerFunc) {
-	DefaultServer.Router("PATCH", path, f)
+func PATCH(path string, f ...ContextHandlerFunc) {
+	DefaultServer.Router(http.MethodPatch, path, f...)
 }
 
 func Run(addr string) {

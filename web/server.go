@@ -26,7 +26,7 @@ func NewServer() *Server {
 	return &server
 }
 
-func (s *Server) Router(method string, path string, handler ContextHandlerFunc) {
+func (s *Server) Router(method string, path string, handlers ...ContextHandlerFunc) {
 	cr, err := regexp.Compile(path)
 	if err != nil {
 		s.Logger.Warn("can not add route [%s] %s", path, err)
@@ -34,10 +34,10 @@ func (s *Server) Router(method string, path string, handler ContextHandlerFunc) 
 	}
 
 	s.Routers = append(s.Routers, Router{
-		r:       path,
-		cr:      cr,
-		method:  method,
-		handler: handler,
+		r:        path,
+		cr:       cr,
+		method:   method,
+		handlers: handlers,
 	})
 
 }
@@ -51,7 +51,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// default header
 	ctx.SetHeader("X-Powered-By", PoweredBy)
-	ctx.SetContextType("text/plain")
+	ctx.SetContentType("text/plain")
 
 	for _, router := range s.Routers {
 		if ctx.Method() != router.method {
@@ -72,7 +72,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Debug(ctx.Params)
 		}
 
-		router.handler(ctx)
+		for _, h := range router.handlers {
+			h(ctx)
+			// if WriteHeader then break next
+			if ctx.ResponseWriter.IsWrited() {
+				break
+			}
+		}
 		s.LogRequest(tstart, ctx)
 		return
 	}

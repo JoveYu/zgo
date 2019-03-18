@@ -5,8 +5,8 @@ import (
 )
 
 type Router struct {
-	r       string
-	cr      *regexp.Regexp
-	method  string
-	handler ContextHandlerFunc
+	r        string
+	cr       *regexp.Regexp
+	method   string
+	handlers []ContextHandlerFunc
 }

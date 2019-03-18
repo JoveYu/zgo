@@ -67,6 +67,10 @@ func (w *LoggingResponseWriter) WriteHeader(status int) {
 	w.ResponseWriter.WriteHeader(status)
 }
 
+func (w *LoggingResponseWriter) IsWrited() bool {
+	return w.status == 0
+}
+
 func (ctx *Context) Param(k string) string {
 	v, ok := ctx.Params[k]
 	if !ok {
@@ -92,14 +96,14 @@ func (ctx *Context) WriteString(s string) {
 }
 
 func (ctx *Context) WriteJSON(v interface{}) error {
-	ctx.SetContextType("application/json")
+	ctx.SetContentType("application/json")
 	return json.NewEncoder(ctx.ResponseWriter).Encode(v)
 }
 
 func (ctx *Context) WriteJSONP(v interface{}) error {
 	callback := ctx.GetQuery("callback")
 	if callback != "" {
-		ctx.SetContextType("application/javascript")
+		ctx.SetContentType("application/javascript")
 		ctx.WriteString(fmt.Sprintf("%s(", callback))
 
 		// XXX if err, body is wrong
@@ -224,9 +228,9 @@ func (ctx *Context) SetCharset(c string) {
 }
 
 // allow use ext to set content type
-// SetContextType("json")
-// SetContextType("application/json")
-func (ctx *Context) SetContextType(t string) string {
+// SetContentType("json")
+// SetContentType("application/json")
+func (ctx *Context) SetContentType(t string) string {
 	// if is ext
 	if !strings.ContainsRune(t, '/') {
 		t = mime.TypeByExtension(fmt.Sprintf(".%s", t))
@@ -253,7 +257,7 @@ func (ctx *Context) ClientIP() string {
 }
 
 func (ctx *Context) Abort(status int, body string) {
-	ctx.SetContextType("text/plain")
+	ctx.SetContentType("text/plain")
 	ctx.WriteHeader(status)
 	ctx.WriteString(body)
 }
