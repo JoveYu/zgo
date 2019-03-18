@@ -204,7 +204,7 @@ func (ctx *Context) SetContextType(t string) string {
 		t = mime.TypeByExtension(fmt.Sprintf(".%s", t))
 	}
 	if t != "" {
-		ctx.SetHeader("Context-Type", fmt.Sprintf("%s; charset=%s", t, ctx.Charset))
+		ctx.SetHeader("Content-Type", fmt.Sprintf("%s; charset=%s", t, ctx.Charset))
 	}
 	return t
 }
