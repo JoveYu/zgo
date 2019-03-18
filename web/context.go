@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/JoveYu/zgo/log"
 )
 
 type ContextHandlerFunc func(Context)
@@ -68,6 +70,7 @@ func ContextCancelHandler(f ContextHandlerFunc) http.Handler {
 }
 
 func (w *LoggingResponseWriter) WriteHeader(status int) {
+	log.Debug("WriteHeader code=%d", status)
 	w.status = status
 	w.isWrited = true
 	w.ResponseWriter.WriteHeader(status)
