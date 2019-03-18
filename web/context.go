@@ -96,6 +96,25 @@ func (ctx *Context) WriteJSON(v interface{}) error {
 	return json.NewEncoder(ctx.ResponseWriter).Encode(v)
 }
 
+func (ctx *Context) WriteJSONP(v interface{}) error {
+	callback := ctx.GetQuery("callback")
+	if callback != "" {
+		ctx.SetContextType("application/javascript")
+		ctx.WriteString(fmt.Sprintf("%s(", callback))
+
+		// XXX if err, body is wrong
+		err := json.NewEncoder(ctx.ResponseWriter).Encode(v)
+		if err != nil {
+			return err
+		}
+
+		ctx.WriteString(")")
+		return nil
+	} else {
+		return ctx.WriteJSON(ctx)
+	}
+}
+
 func (ctx *Context) WriteFile(path string) {
 	http.ServeFile(ctx.ResponseWriter, ctx.Request, path)
 }
