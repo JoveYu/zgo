@@ -1,9 +1,9 @@
 package webutil
 
 type Response struct {
-	Respcd  string      `json:"respcd"`
-	Respmsg string      `json:"respmsg"`
-	Resperr string      `json:"resperr"`
+	Code    string      `json:"code"`
+	Message string      `json:"msg"`
+	Error   string      `json:"err"`
 	Data    interface{} `json:"data"`
 }
 
@@ -57,9 +57,9 @@ var (
 
 func Success(data interface{}, msg string) Response {
 	return Response{
-		Respcd:  OK,
-		Respmsg: msg,
-		Resperr: ErrMsg[OK],
+		Code:    OK,
+		Message: msg,
+		Error:   ErrMsg[OK],
 		Data:    data,
 	}
 }
@@ -70,9 +70,9 @@ func Error(code string, data interface{}, msg string) Response {
 		resperr = "Error"
 	}
 	return Response{
-		Respcd:  code,
-		Respmsg: msg,
-		Resperr: resperr,
+		Code:    code,
+		Message: msg,
+		Error:   resperr,
 		Data:    data,
 	}
 }
