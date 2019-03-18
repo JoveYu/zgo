@@ -10,6 +10,10 @@
 3. 灵活的中间件支持，目前自带CORS JSONP 中间件
 4. 完全兼容http库，支持不使用路由，独立使用context，使用`ContextHandler`
 
+## 文档
+
+[https://godoc.org/github.com/JoveYu/zgo/web](https://godoc.org/github.com/JoveYu/zgo/web)
+
 ## TODO
 1. 后续可以考虑支持多backend 比如fasthttp 目前对极致性能需求不大
 2. 目前正则路由(30行实现)已经比较灵活，后续有需要在考虑更强大正则

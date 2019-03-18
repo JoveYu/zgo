@@ -10,6 +10,10 @@
 3. 提供方便的Scan，可以直接查询结果到struct
 4. 统一日志输出，打印连接池状态
 
+## 文档
+
+[https://godoc.org/github.com/JoveYu/zgo/sql](https://godoc.org/github.com/JoveYu/zgo/sql)
+
 ## TODO
 
 1. sqlbuilder 支持selectjoin 比较容易 现在没需求
