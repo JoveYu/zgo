@@ -111,7 +111,7 @@ func (ctx *Context) WriteJSONP(v interface{}) error {
 		ctx.WriteString(")")
 		return nil
 	} else {
-		return ctx.WriteJSON(ctx)
+		return ctx.WriteJSON(v)
 	}
 }
 
