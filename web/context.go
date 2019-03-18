@@ -107,6 +107,7 @@ func (ctx *Context) WriteString(s string) {
 
 func (ctx *Context) WriteJSON(v interface{}) error {
 	ctx.SetContentType("application/json")
+	ctx.WriteHeader(200)
 	return json.NewEncoder(ctx.ResponseWriter).Encode(v)
 }
 
@@ -114,6 +115,7 @@ func (ctx *Context) WriteJSONP(v interface{}) error {
 	callback := ctx.GetQuery("callback")
 	if callback != "" {
 		ctx.SetContentType("application/javascript")
+		ctx.WriteHeader(200)
 		ctx.WriteString(fmt.Sprintf("%s(", callback))
 
 		// XXX if err, body is wrong
