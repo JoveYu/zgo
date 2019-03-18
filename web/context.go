@@ -119,6 +119,15 @@ func (ctx *Context) WriteFile(path string) {
 	http.ServeFile(ctx.ResponseWriter, ctx.Request, path)
 }
 
+// simple cors allow ajax
+func (ctx *Context) CORS() {
+	origin := ctx.GetHeader("Origin")
+	if origin != "" {
+		ctx.SetHeader("Access-Control-Allow-Origin", origin)
+		ctx.SetHeader("Access-Control-Allow-Credentials", "true")
+	}
+}
+
 func (ctx *Context) Headers() http.Header {
 	return ctx.Request.Header
 }
