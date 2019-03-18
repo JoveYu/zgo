@@ -6,7 +6,7 @@
 对自带的http模块的适当封装，尽量贴近HTTP的本质，方便使用
 
 1. 引入ctx 提供常用的工具函数 直接使用 参考`context.go`
-2. 基于正则表达式的路由，灵活简单，通用性强
+2. 基于正则表达式的路由(30行实现)，灵活简单，通用性强
 3. 灵活的中间件支持，目前自带CORS JSONP 中间件
 4. 完全兼容http库，支持不使用路由，独立使用context，使用`ContextHandler`
 
@@ -15,8 +15,9 @@
 [https://godoc.org/github.com/JoveYu/zgo/web](https://godoc.org/github.com/JoveYu/zgo/web)
 
 ## TODO
+
 1. 后续可以考虑支持多backend 比如fasthttp 目前对极致性能需求不大
-2. 目前正则路由(30行实现)已经比较灵活，后续有需要在考虑更强大正则
+2. 目前正则路由已经比较灵活，后续有需要在考虑更强大正则
 3. 控制内存分配，引入pool
 
 ## Example
