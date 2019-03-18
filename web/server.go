@@ -42,7 +42,7 @@ func (s *Server) Router(method string, path string, handler ContextHandlerFunc) 
 
 }
 
-func (s *Server) ProcessHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tstart := time.Now()
 
 	ctx := NewContext(w, r)
@@ -82,8 +82,7 @@ func (s *Server) ProcessHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Run(addr string) {
-	http.HandleFunc("/", s.ProcessHandler)
-	http.ListenAndServe(addr, nil)
+	http.ListenAndServe(addr, s)
 }
 
 func (s *Server) LogRequest(tstart time.Time, ctx Context) {
