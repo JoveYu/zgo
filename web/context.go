@@ -87,6 +87,10 @@ func (ctx *Context) URL() *url.URL {
 	return ctx.Request.URL
 }
 
+func (ctx *Context) ReadJSON(v interface{}) error {
+	return json.NewDecoder(ctx.Request.Body).Decode(v)
+}
+
 func (ctx *Context) WriteHeader(status int) {
 	ctx.ResponseWriter.WriteHeader(status)
 }
