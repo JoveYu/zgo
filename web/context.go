@@ -18,7 +18,8 @@ type ContextHandlerFunc func(Context)
 
 type LoggingResponseWriter struct {
 	http.ResponseWriter
-	status int
+	status   int
+	isWrited bool
 }
 
 type Context struct {
@@ -35,10 +36,14 @@ type Context struct {
 
 func NewContext(w http.ResponseWriter, r *http.Request) Context {
 	return Context{
-		Request:        r,
-		ResponseWriter: &LoggingResponseWriter{w, 0},
-		Charset:        "utf-8",
-		formParsed:     false,
+		Request: r,
+		ResponseWriter: &LoggingResponseWriter{
+			ResponseWriter: w,
+			status:         200,
+			isWrited:       false,
+		},
+		Charset:    "utf-8",
+		formParsed: false,
 
 		Params: make(map[string]string),
 	}
@@ -64,11 +69,12 @@ func ContextCancelHandler(f ContextHandlerFunc) http.Handler {
 
 func (w *LoggingResponseWriter) WriteHeader(status int) {
 	w.status = status
+	w.isWrited = true
 	w.ResponseWriter.WriteHeader(status)
 }
 
 func (w *LoggingResponseWriter) IsWrited() bool {
-	return w.status == 0
+	return w.isWrited
 }
 
 func (ctx *Context) Param(k string) string {
