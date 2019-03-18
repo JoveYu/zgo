@@ -88,8 +88,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx.Abort(http.StatusNotFound, http.StatusText(http.StatusNotFound))
 }
 
-func (s *Server) Run(addr string) {
-	http.ListenAndServe(addr, s)
+func (s *Server) Run(addr string) error {
+	return http.ListenAndServe(addr, s)
 }
 
 func (s *Server) LogRequest(tstart time.Time, ctx *Context) {

@@ -7,6 +7,8 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
+type Map map[interface{}]interface{}
+
 // from qfcommon
 const (
 	OK string = "0000"

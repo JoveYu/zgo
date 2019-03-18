@@ -32,6 +32,6 @@ func PATCH(path string, f ...ContextHandlerFunc) {
 	DefaultServer.Router(http.MethodPatch, path, f...)
 }
 
-func Run(addr string) {
-	DefaultServer.Run(addr)
+func Run(addr string) error {
+	return DefaultServer.Run(addr)
 }
