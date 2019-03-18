@@ -46,6 +46,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tstart := time.Now()
 
 	ctx := NewContext(w, r)
+	defer s.LogRequest(tstart, &ctx)
 
 	path := ctx.URL().Path
 
@@ -57,9 +58,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if ctx.Method() != router.method {
 			continue
 		}
+
 		if !router.cr.MatchString(path) {
 			continue
 		}
+
 		match := router.cr.FindStringSubmatch(path)
 		if len(match[0]) != len(path) {
 			continue
@@ -79,19 +82,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		s.LogRequest(tstart, ctx)
 		return
 	}
 
 	ctx.Abort(http.StatusNotFound, http.StatusText(http.StatusNotFound))
-	s.LogRequest(tstart, ctx)
 }
 
 func (s *Server) Run(addr string) {
 	http.ListenAndServe(addr, s)
 }
 
-func (s *Server) LogRequest(tstart time.Time, ctx Context) {
+func (s *Server) LogRequest(tstart time.Time, ctx *Context) {
 	if s.Logger == nil {
 		s.Logger = log.DefaultLog
 	}
