@@ -67,6 +67,14 @@ func (w *LoggingResponseWriter) WriteHeader(status int) {
 	w.ResponseWriter.WriteHeader(status)
 }
 
+func (ctx *Context) Param(k string) string {
+	v, ok := ctx.Params[k]
+	if !ok {
+		return ""
+	}
+	return v
+}
+
 func (ctx *Context) Method() string {
 	return ctx.Request.Method
 }
