@@ -3,6 +3,7 @@ package web
 import (
 	"bytes"
 	"net/http"
+	"net/http/httptest"
 	"net/http/httputil"
 	"regexp"
 	"time"
@@ -63,6 +64,26 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, b := range bytes.Split(data, []byte("\n")) {
 			s.Logger.Debug("> %s", b)
 		}
+
+		// debug resp
+		rec := httptest.NewRecorder()
+		ctx = NewContext(rec, r)
+
+		defer func() {
+			s.Logger.Debug("< %s %d %s", r.Proto, rec.Code, http.StatusText(rec.Code))
+			for k, v := range rec.HeaderMap {
+				w.Header()[k] = v
+				for _, vv := range v {
+					log.Debug("< %s: %s", k, vv)
+				}
+			}
+
+			s.Logger.Debug("<")
+			s.Logger.Debug("< %s", rec.Body)
+			w.WriteHeader(rec.Code)
+			rec.Body.WriteTo(w)
+
+		}()
 	}
 
 	path := ctx.URL().Path

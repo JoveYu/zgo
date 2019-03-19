@@ -12,5 +12,6 @@ func TestWeb(t *testing.T) {
 	GET("^/$", MiddlewareCORS, thandler)
 	GET("/(?P<name>\\w+)$", thandler)
 
+	DefaultServer.Debug = true
 	Run("127.0.0.1:7000")
 }
