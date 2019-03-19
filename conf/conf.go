@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"io/ioutil"
 
 	"github.com/BurntSushi/toml"
@@ -69,4 +70,12 @@ func Install(path string, v interface{}) error {
 		return errors.New("no support extension")
 	}
 	return nil
+}
+
+var ConfigPath string
+
+func InstallFlag(defaultv string, v interface{}) error {
+	flag.StringVar(&ConfigPath, "c", defaultv, "config path")
+	flag.Parsed()
+	return Install(ConfigPath, v)
 }
