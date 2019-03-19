@@ -1,7 +1,9 @@
 package web
 
 import (
+	"bytes"
 	"net/http"
+	"net/http/httputil"
 	"regexp"
 	"time"
 
@@ -17,11 +19,14 @@ type Server struct {
 	Routers []Router
 	Logger  *log.LevelLogger
 	Charset string
+	Debug   bool
 }
 
 func NewServer() *Server {
 	server := Server{
-		Logger: log.DefaultLog,
+		Logger:  log.DefaultLog,
+		Charset: "utf-8",
+		Debug:   false,
 	}
 	return &server
 }
@@ -47,6 +52,18 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	ctx := NewContext(w, r)
 	defer s.LogRequest(tstart, &ctx)
+
+	// debug
+	if s.Debug {
+		// debug req
+		data, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			s.Logger.Error("can not dump req: %s", err)
+		}
+		for _, b := range bytes.Split(data, []byte("\n")) {
+			s.Logger.Debug(b)
+		}
+	}
 
 	path := ctx.URL().Path
 
@@ -89,13 +106,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Run(addr string) error {
+	if s.Logger == nil {
+		s.Logger = log.DefaultLog
+	}
+
 	return http.ListenAndServe(addr, s)
 }
 
 func (s *Server) LogRequest(tstart time.Time, ctx *Context) {
-	if s.Logger == nil {
-		s.Logger = log.DefaultLog
-	}
 
 	s.Logger.Info("%d|%s|%s|%s|%s|%d",
 		ctx.ResponseWriter.status, ctx.Method(), ctx.URL().Path,

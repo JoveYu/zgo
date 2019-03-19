@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+
 	"github.com/BurntSushi/toml"
 	"github.com/go-yaml/yaml"
-	"io/ioutil"
 )
 
 type formater struct {
