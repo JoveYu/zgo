@@ -61,7 +61,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			s.Logger.Error("can not dump req: %s", err)
 		}
 		for _, b := range bytes.Split(data, []byte("\n")) {
-			s.Logger.Debug(b)
+			s.Logger.Debug("> %s", b)
 		}
 	}
 
