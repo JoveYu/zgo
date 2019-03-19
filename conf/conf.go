@@ -76,6 +76,6 @@ var ConfigPath string
 
 func InstallFlag(defaultv string, v interface{}) error {
 	flag.StringVar(&ConfigPath, "c", defaultv, "config path")
-	flag.Parsed()
+	flag.Parse()
 	return Install(ConfigPath, v)
 }
