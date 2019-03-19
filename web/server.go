@@ -77,6 +77,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					log.Debug("< %s: %s", k, vv)
 				}
 			}
+			// XXX Content-Length and Date is missing
 
 			s.Logger.Debug("<")
 			s.Logger.Debug("< %s", rec.Body)
