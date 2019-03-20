@@ -1,7 +1,6 @@
 package web
 
 import (
-	"bytes"
 	"net/http"
 	"net/http/httputil"
 	"regexp"
@@ -64,12 +63,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			s.Logger.Error("can not dump req: %s", err)
 		}
-		for _, b := range bytes.Split(data, []byte("\n")) {
+		for _, b := range strings.Split(string(data), "\n") {
 			s.Logger.Debug("> %s", b)
 		}
 
 		// debug resp
-		defer func(ctx *Context) {
+		defer func(ctx Context) {
 			s.Logger.Debug("< %s %d %s", ctx.Request.Proto,
 				ctx.Flag.Status, http.StatusText(ctx.Flag.Status),
 			)
@@ -81,8 +80,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			s.Logger.Debug("<")
-			s.Logger.Debug("< %s", ctx.DebugBody.String())
-		}(&ctx)
+			for _, b := range strings.Split(ctx.DebugBody.String(), "\n") {
+				s.Logger.Debug("< %s", b)
+			}
+		}(ctx)
 	}
 
 	path := ctx.URL().Path
