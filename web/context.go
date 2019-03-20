@@ -142,6 +142,16 @@ func (ctx *Context) CORS() {
 		ctx.SetHeader("Access-Control-Allow-Origin", origin)
 		ctx.SetHeader("Access-Control-Allow-Credentials", "true")
 	}
+
+	method := ctx.GetHeader("Access-Control-Request-Method")
+	if method != "" {
+		ctx.SetHeader("Access-Control-Allow-Methods", method)
+	}
+
+	header := ctx.GetHeader("Access-Control-Request-Headers")
+	if header != "" {
+		ctx.SetHeader("Access-Control-Allow-Headers", header)
+	}
 }
 
 func (ctx *Context) Headers() http.Header {
