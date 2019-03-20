@@ -117,24 +117,19 @@ func (ctx *Context) WriteString(s string) {
 
 func (ctx *Context) WriteJSON(v interface{}) error {
 	ctx.SetContentType("application/json")
-	ctx.WriteHeader(200)
 	return json.NewEncoder(ctx).Encode(v)
 }
 
 func (ctx *Context) WriteJSONP(v interface{}) error {
 	callback := ctx.GetQuery("callback")
 	if callback != "" {
-		ctx.SetContentType("application/javascript")
-		ctx.WriteHeader(200)
-		ctx.WriteString(fmt.Sprintf("%s(", callback))
-
-		// XXX if err, body is wrong
-		err := json.NewEncoder(ctx).Encode(v)
+		data, err := json.Marshal(v)
 		if err != nil {
 			return err
 		}
 
-		ctx.WriteString(")")
+		ctx.SetContentType("application/javascript")
+		ctx.WriteString(fmt.Sprintf("%s(%s)", callback, data))
 		return nil
 	} else {
 		return ctx.WriteJSON(v)
