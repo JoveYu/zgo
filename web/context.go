@@ -16,36 +16,38 @@ import (
 
 type ContextHandlerFunc func(Context)
 
-type LoggingResponseWriter struct {
-	http.ResponseWriter
-	status   int
-	isWrited bool
-}
-
 type Context struct {
 	context.Context
 	Request        *http.Request
-	ResponseWriter *LoggingResponseWriter
+	ResponseWriter http.ResponseWriter
 	Charset        string
+
+	// for debug
+	Debug     bool
+	DebugBody *strings.Builder
 
 	// for router params
 	Params map[string]string
 
 	formParsed bool
+	breakNext  bool
+	status     int
 }
 
 func NewContext(w http.ResponseWriter, r *http.Request) Context {
 	return Context{
-		Request: r,
-		ResponseWriter: &LoggingResponseWriter{
-			ResponseWriter: w,
-			status:         200,
-			isWrited:       false,
-		},
-		Charset:    "utf-8",
-		formParsed: false,
+		Request:        r,
+		ResponseWriter: w,
+		Charset:        "utf-8",
 
-		Params: make(map[string]string),
+		// for debug
+		Debug: false,
+
+		Params: map[string]string{},
+
+		formParsed: false,
+		breakNext:  false,
+		status:     200,
 	}
 }
 
@@ -67,14 +69,8 @@ func ContextCancelHandler(f ContextHandlerFunc) http.Handler {
 	})
 }
 
-func (w *LoggingResponseWriter) WriteHeader(status int) {
-	w.status = status
-	w.isWrited = true
-	w.ResponseWriter.WriteHeader(status)
-}
-
-func (w *LoggingResponseWriter) IsWrited() bool {
-	return w.isWrited
+func (ctx *Context) BreakNext() {
+	ctx.breakNext = true
 }
 
 func (ctx *Context) Param(k string) string {
@@ -97,18 +93,27 @@ func (ctx *Context) ReadJSON(v interface{}) error {
 	return json.NewDecoder(ctx.Request.Body).Decode(v)
 }
 
+func (ctx *Context) Write(b []byte) (int, error) {
+	if ctx.Debug {
+		ctx.DebugBody.Write(b)
+	}
+
+	return ctx.ResponseWriter.Write(b)
+}
+
 func (ctx *Context) WriteHeader(status int) {
+	ctx.status = status
 	ctx.ResponseWriter.WriteHeader(status)
 }
 
 func (ctx *Context) WriteString(s string) {
-	ctx.ResponseWriter.Write([]byte(s))
+	ctx.Write([]byte(s))
 }
 
 func (ctx *Context) WriteJSON(v interface{}) error {
 	ctx.SetContentType("application/json")
 	ctx.WriteHeader(200)
-	return json.NewEncoder(ctx.ResponseWriter).Encode(v)
+	return json.NewEncoder(ctx).Encode(v)
 }
 
 func (ctx *Context) WriteJSONP(v interface{}) error {
@@ -119,7 +124,7 @@ func (ctx *Context) WriteJSONP(v interface{}) error {
 		ctx.WriteString(fmt.Sprintf("%s(", callback))
 
 		// XXX if err, body is wrong
-		err := json.NewEncoder(ctx.ResponseWriter).Encode(v)
+		err := json.NewEncoder(ctx).Encode(v)
 		if err != nil {
 			return err
 		}

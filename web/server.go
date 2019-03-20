@@ -3,9 +3,9 @@ package web
 import (
 	"bytes"
 	"net/http"
-	"net/http/httptest"
 	"net/http/httputil"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/JoveYu/zgo/log"
@@ -56,6 +56,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// debug
 	if s.Debug {
+		ctx.Debug = true
+		ctx.DebugBody = &strings.Builder{}
+
 		// debug req
 		data, err := httputil.DumpRequest(r, true)
 		if err != nil {
@@ -66,25 +69,18 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// debug resp
-		rec := httptest.NewRecorder()
-		ctx = NewContext(rec, r)
-
-		defer func() {
-			s.Logger.Debug("< %s %d %s", r.Proto, rec.Code, http.StatusText(rec.Code))
-			for k, v := range rec.HeaderMap {
-				w.Header()[k] = v
+		defer func(ctx *Context) {
+			s.Logger.Debug("< %s %d %s", ctx.Request.Proto, ctx.status, http.StatusText(ctx.status))
+			for k, v := range ctx.ResponseWriter.Header() {
 				for _, vv := range v {
 					log.Debug("< %s: %s", k, vv)
 				}
+				// XXX Content-Length and Date is missing
 			}
-			// XXX Content-Length and Date is missing
 
 			s.Logger.Debug("<")
-			s.Logger.Debug("< %s", rec.Body)
-			w.WriteHeader(rec.Code)
-			rec.Body.WriteTo(w)
-
-		}()
+			s.Logger.Debug("< %s", ctx.DebugBody.String())
+		}(&ctx)
 	}
 
 	path := ctx.URL().Path
@@ -117,7 +113,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, h := range router.handlers {
 			h(ctx)
 			// if WriteHeader then break next
-			if ctx.ResponseWriter.IsWrited() {
+			if ctx.breakNext {
 				break
 			}
 		}
@@ -138,7 +134,7 @@ func (s *Server) Run(addr string) error {
 func (s *Server) LogRequest(tstart time.Time, ctx *Context) {
 
 	s.Logger.Info("%d|%s|%s|%s|%s|%d",
-		ctx.ResponseWriter.status, ctx.Method(), ctx.URL().Path,
+		ctx.status, ctx.Method(), ctx.URL().Path,
 		ctx.Query().Encode(), ctx.ClientIP(),
 		time.Since(tstart)/time.Microsecond,
 	)
