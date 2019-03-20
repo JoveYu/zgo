@@ -70,7 +70,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// debug resp
 		defer func(ctx *Context) {
-			s.Logger.Debug("< %s %d %s", ctx.Request.Proto, ctx.status, http.StatusText(ctx.status))
+			s.Logger.Debug("< %s %d %s", ctx.Request.Proto,
+				ctx.Flag.Status, http.StatusText(ctx.Flag.Status),
+			)
 			for k, v := range ctx.ResponseWriter.Header() {
 				for _, vv := range v {
 					log.Debug("< %s: %s", k, vv)
@@ -112,8 +114,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		for _, h := range router.handlers {
 			h(ctx)
-			// if WriteHeader then break next
-			if ctx.breakNext {
+			if ctx.Flag.BreakNext {
 				break
 			}
 		}
@@ -134,7 +135,7 @@ func (s *Server) Run(addr string) error {
 func (s *Server) LogRequest(tstart time.Time, ctx *Context) {
 
 	s.Logger.Info("%d|%s|%s|%s|%s|%d",
-		ctx.status, ctx.Method(), ctx.URL().Path,
+		ctx.Flag.Status, ctx.Method(), ctx.URL().Path,
 		ctx.Query().Encode(), ctx.ClientIP(),
 		time.Since(tstart)/time.Microsecond,
 	)

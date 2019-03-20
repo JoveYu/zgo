@@ -16,6 +16,12 @@ import (
 
 type ContextHandlerFunc func(Context)
 
+type ContextFlag struct {
+	FormParsed bool
+	BreakNext  bool
+	Status     int
+}
+
 type Context struct {
 	context.Context
 	Request        *http.Request
@@ -29,9 +35,7 @@ type Context struct {
 	// for router params
 	Params map[string]string
 
-	formParsed bool
-	breakNext  bool
-	status     int
+	Flag *ContextFlag
 }
 
 func NewContext(w http.ResponseWriter, r *http.Request) Context {
@@ -40,14 +44,15 @@ func NewContext(w http.ResponseWriter, r *http.Request) Context {
 		ResponseWriter: w,
 		Charset:        "utf-8",
 
-		// for debug
 		Debug: false,
 
 		Params: map[string]string{},
 
-		formParsed: false,
-		breakNext:  false,
-		status:     200,
+		Flag: &ContextFlag{
+			FormParsed: false,
+			BreakNext:  false,
+			Status:     200,
+		},
 	}
 }
 
@@ -70,7 +75,7 @@ func ContextCancelHandler(f ContextHandlerFunc) http.Handler {
 }
 
 func (ctx *Context) BreakNext() {
-	ctx.breakNext = true
+	ctx.Flag.BreakNext = true
 }
 
 func (ctx *Context) Param(k string) string {
@@ -102,7 +107,7 @@ func (ctx *Context) Write(b []byte) (int, error) {
 }
 
 func (ctx *Context) WriteHeader(status int) {
-	ctx.status = status
+	ctx.Flag.Status = status
 	ctx.ResponseWriter.WriteHeader(status)
 }
 
@@ -235,17 +240,17 @@ func (ctx *Context) FormFile(k string) (multipart.File, *multipart.FileHeader, e
 }
 
 func (ctx *Context) Form() url.Values {
-	if !ctx.formParsed {
+	if !ctx.Flag.FormParsed {
 		ctx.Request.ParseForm()
-		ctx.formParsed = true
+		ctx.Flag.FormParsed = true
 	}
 	return ctx.Request.Form
 }
 
 func (ctx *Context) GetForm(k string) string {
-	if !ctx.formParsed {
+	if !ctx.Flag.FormParsed {
 		ctx.Request.ParseForm()
-		ctx.formParsed = true
+		ctx.Flag.FormParsed = true
 	}
 	return ctx.Request.Form.Get(k)
 }
