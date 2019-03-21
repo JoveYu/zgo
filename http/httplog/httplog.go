@@ -1,5 +1,3 @@
-// inspired by github.com/motemen/go-loghttp
-
 package httplog
 
 import (
