@@ -39,6 +39,7 @@ func (s *Server) StaticFile(path string, dir string) {
 			return
 		}
 
+		// XXX status 200 in log is wrong
 		handler := http.StripPrefix(path, http.FileServer(http.Dir(dir)))
 		handler.ServeHTTP(ctx.ResponseWriter, ctx.Request)
 	}

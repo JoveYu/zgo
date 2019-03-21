@@ -17,7 +17,7 @@ func handler2(ctx Context) {
 func TestWeb(t *testing.T) {
 	log.Install("stdout")
 
-	StaticFile("/static", "/tmp/")
+	StaticFile("/static/", "/tmp/")
 	GET("^/$", handler1, handler2)
 	GET("/(?P<name>\\w+)$", thandler)
 
