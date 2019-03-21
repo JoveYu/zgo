@@ -5,7 +5,7 @@
 
 一行代码记录所有http日志
 
-只需要在import中添加`_ "github.com/JoveYu/zgo/http/httplog/patch"` 既可自动打印http库的请求日志
+只需要在import中添加`_ "github.com/JoveYu/zgo/http/httplog/patch"` 即可自动打印http库的请求日志
 
 ```go
 package main

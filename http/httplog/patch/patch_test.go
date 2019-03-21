@@ -8,5 +8,5 @@ import (
 
 func TestPatch(t *testing.T) {
 	log.Install("stdout")
-	http.Get("http://httpbin.or")
+	http.Get("http://httpbin.org/get")
 }
