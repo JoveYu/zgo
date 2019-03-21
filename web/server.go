@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"regexp"
@@ -31,6 +32,21 @@ func NewServer() *Server {
 	return &server
 }
 
+func (s *Server) StaticFile(path string, dir string) {
+	r := fmt.Sprintf("^%s.*$", path)
+	handler := func(ctx Context) {
+		// disable list directory
+		if strings.HasSuffix(ctx.URL().Path, "/") {
+			http.NotFound(ctx.ResponseWriter, ctx.Request)
+			return
+		}
+
+		handler := http.StripPrefix(path, http.FileServer(http.Dir(dir)))
+		handler.ServeHTTP(ctx.ResponseWriter, ctx.Request)
+	}
+	s.Router("GET", r, handler)
+}
+
 func (s *Server) Router(method string, path string, handlers ...ContextHandlerFunc) {
 	cr, err := regexp.Compile(path)
 	if err != nil {
@@ -44,7 +60,6 @@ func (s *Server) Router(method string, path string, handlers ...ContextHandlerFu
 		method:   method,
 		handlers: handlers,
 	})
-
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -74,11 +89,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			)
 			for k, v := range ctx.ResponseWriter.Header() {
 				for _, vv := range v {
-					log.Debug("< %s: %s", k, vv)
+					s.Logger.Debug("< %s: %s", k, vv)
 				}
 				// XXX Content-Length and Date is missing
 			}
-
 			s.Logger.Debug("<")
 			for _, b := range strings.Split(ctx.DebugBody.String(), "\n") {
 				s.Logger.Debug("< %s", b)
@@ -93,7 +107,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx.SetContentType("text/plain")
 
 	for _, router := range s.Routers {
-		if ctx.Method() != router.method {
+
+		// HEAD request use GET Handler
+		if ctx.Method() != router.method && !(ctx.Method() == "HEAD" && router.method == "GET") {
 			continue
 		}
 
@@ -110,7 +126,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			for idx, name := range router.cr.SubexpNames()[1:] {
 				ctx.Params[name] = match[idx+1]
 			}
-			log.Debug(ctx.Params)
 		}
 
 		for _, h := range router.handlers {

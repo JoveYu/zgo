@@ -36,6 +36,10 @@ func OPTIONS(path string, f ...ContextHandlerFunc) {
 	DefaultServer.Router(http.MethodOptions, path, f...)
 }
 
+func StaticFile(path string, dir string) {
+	DefaultServer.StaticFile(path, dir)
+}
+
 func Run(addr string) error {
 	return DefaultServer.Run(addr)
 }

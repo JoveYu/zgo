@@ -1,5 +1,5 @@
 package web
 
-func MiddlewareCORS(ctx Context) {
+func CORS(ctx Context) {
 	ctx.CORS()
 }
