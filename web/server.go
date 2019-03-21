@@ -18,14 +18,12 @@ const (
 type Server struct {
 	Addr    string
 	Routers []Router
-	Logger  *log.LevelLogger
 	Charset string
 	Debug   bool
 }
 
 func NewServer() *Server {
 	server := Server{
-		Logger:  log.DefaultLog,
 		Charset: "utf-8",
 		Debug:   false,
 	}
@@ -50,7 +48,7 @@ func (s *Server) StaticFile(path string, dir string) {
 func (s *Server) Router(method string, path string, handlers ...ContextHandlerFunc) {
 	cr, err := regexp.Compile(path)
 	if err != nil {
-		s.Logger.Warn("can not add route [%s] %s", path, err)
+		log.Warn("can not add route [%s] %s", path, err)
 		return
 	}
 
@@ -76,26 +74,26 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// debug req
 		data, err := httputil.DumpRequest(r, true)
 		if err != nil {
-			s.Logger.Error("can not dump req: %s", err)
+			log.Error("can not dump req: %s", err)
 		}
 		for _, b := range strings.Split(string(data), "\n") {
-			s.Logger.Debug("> %s", b)
+			log.Debug("> %s", b)
 		}
 
 		// debug resp
 		defer func(ctx Context) {
-			s.Logger.Debug("< %s %d %s", ctx.Request.Proto,
+			log.Debug("< %s %d %s", ctx.Request.Proto,
 				ctx.Flag.Status, http.StatusText(ctx.Flag.Status),
 			)
 			for k, v := range ctx.ResponseWriter.Header() {
 				for _, vv := range v {
-					s.Logger.Debug("< %s: %s", k, vv)
+					log.Debug("< %s: %s", k, vv)
 				}
 				// XXX Content-Length and Date is missing
 			}
-			s.Logger.Debug("<")
+			log.Debug("<")
 			for _, b := range strings.Split(ctx.DebugBody.String(), "\n") {
-				s.Logger.Debug("< %s", b)
+				log.Debug("< %s", b)
 			}
 		}(ctx)
 	}
@@ -141,16 +139,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Run(addr string) error {
-	if s.Logger == nil {
-		s.Logger = log.DefaultLog
-	}
-
 	return http.ListenAndServe(addr, s)
 }
 
 func (s *Server) LogRequest(tstart time.Time, ctx *Context) {
 
-	s.Logger.Info("%d|%s|%s|%s|%s|%d",
+	log.Info("%d|%s|%s|%s|%s|%d",
 		ctx.Flag.Status, ctx.Method(), ctx.URL().Path,
 		ctx.Query().Encode(), ctx.ClientIP(),
 		time.Since(tstart)/time.Microsecond,
