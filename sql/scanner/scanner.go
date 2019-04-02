@@ -3,12 +3,15 @@ package scanner
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"reflect"
+
+	"github.com/JoveYu/zgo/log"
 )
 
 var (
 	StructTag string = "zdb"
+	// for useless field to scan
+	tmpField sql.RawBytes = []byte{}
 )
 
 func ScanStruct(rows *sql.Rows, dest interface{}) error {
@@ -75,7 +78,8 @@ func scanOne(rows *sql.Rows, dest interface{}) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("not find field [%s]", col))
+			fields[idx] = &tmpField
+			log.Warn("sql scanner skip field [%s] in struct", col)
 		}
 	}
 
