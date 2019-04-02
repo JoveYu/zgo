@@ -37,7 +37,7 @@ const (
 
 var (
 	ErrMsg map[string]string = map[string]string{
-		OK:            "请求成功",
+		OK:            "",
 		ERR_DB:        "数据库错误",
 		ERR_RPC:       "内部服务错误",
 		ERR_SESSION:   "用户未登陆",
